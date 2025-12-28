@@ -44,5 +44,4 @@ You can use the `watch-demo` command for development:
 $ npm run watch-demo
 ```
 
-Open `demo/index.html` in your browser to run demo. Alternatively, use
-`build-demo-react` and `watch-demo-react` to build the React-based demo.
+Open `demo/index.html` in your browser to run demo.
