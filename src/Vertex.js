@@ -1,5 +1,4 @@
-import { createElement as h } from "preact";
-import { useCallback } from "preact/hooks";
+import { createElement as h, memo, useCallback } from "react";
 import classnames from "classnames";
 
 import { avg, vertexEvents, signEquals } from "./helper.js";
@@ -10,7 +9,7 @@ const absoluteStyle = (zIndex) => ({
   zIndex,
 });
 
-export default function Vertex(props) {
+const Vertex = memo(function Vertex(props) {
   let {
     position,
     shift,
@@ -225,4 +224,6 @@ export default function Vertex(props) {
         heat.text && heat.text.toString()
       )
   );
-}
+});
+
+export default Vertex;
