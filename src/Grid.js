@@ -1,5 +1,8 @@
 import { createElement as h, Component } from "preact";
 
+// Relevent for Tenuki. Would want to find a better abstraction.
+const MagicNumberVertexScaleFactor = 40
+
 export default class Grid extends Component {
   shouldComponentUpdate(nextProps) {
     return (
@@ -16,6 +19,7 @@ export default class Grid extends Component {
   render() {
     let { vertexSize, width, height, xs, ys, hoshis } = this.props;
     let halfVertexSize = vertexSize / 2;
+    let gridLineSize = vertexSize / MagicNumberVertexScaleFactor
 
     return (
       xs.length > 0 &&
@@ -49,7 +53,7 @@ export default class Grid extends Component {
               xs[xs.length - 1] === width - 1
                 ? (2 * xs.length - 1) * halfVertexSize - x
                 : xs.length * vertexSize - x,
-            height: 1,
+            height: gridLineSize,
           });
         }),
 
@@ -62,7 +66,7 @@ export default class Grid extends Component {
             className: "shudan-gridline shudan-vertical",
             x: (2 * i + 1) * halfVertexSize,
             y: y,
-            width: 1,
+            width: gridLineSize,
             height:
               ys[ys.length - 1] === height - 1
                 ? (2 * ys.length - 1) * halfVertexSize - y
