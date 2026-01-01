@@ -44,6 +44,7 @@ export default class Goban extends Component {
         clearAnimatedVerticesHandler: setTimeout(() => {
           this.setState({
             animatedVertices: [],
+            changedVertices: [],
             clearAnimatedVerticesHandler: null,
           });
         }, this.props.animationDuration ?? 200),
@@ -68,6 +69,7 @@ export default class Goban extends Component {
       ghostStoneMap,
       fuzzyStonePlacement = false,
       showCoordinates = false,
+      changedVertices = [],
       lines = [],
       selectedVertices = [],
       dimmedVertices = [],
@@ -171,6 +173,7 @@ export default class Goban extends Component {
                     ghostStone: ghostStoneMap?.[y]?.[x],
                     dimmed: dimmedVertices.some(equalsVertex),
                     animate: animatedVertices.some(equalsVertex),
+                    changed: changedVertices.some(equalsVertex),
 
                     paint: paintMap?.[y]?.[x],
                     paintLeft: paintMap?.[y]?.[x - 1],
@@ -257,6 +260,7 @@ Goban.getDerivedStateFromProps = function (props, state) {
 
   if (state.width === width && state.height === height) {
     let animatedVertices = state.animatedVertices;
+    let changedVertices = state.changedVertices;
 
     if (
       props.animateStonePlacement &&
@@ -264,11 +268,13 @@ Goban.getDerivedStateFromProps = function (props, state) {
       state.clearAnimatedVerticesHandler == null
     ) {
       animatedVertices = diffSignMap(state.signMap, signMap);
+      changedVertices = animatedVertices;
     }
 
     let result = {
       signMap,
       animatedVertices,
+      changedVertices
     };
 
     if (
@@ -297,6 +303,7 @@ Goban.getDerivedStateFromProps = function (props, state) {
     rangeX,
     rangeY,
     animatedVertices: [],
+    changedVertices: [],
     clearAnimatedVerticesHandler: null,
     xs: range(width).slice(rangeX[0], rangeX[1] + 1),
     ys: range(height).slice(rangeY[0], rangeY[1] + 1),

@@ -29,6 +29,7 @@ const Vertex = memo(function Vertex(props) {
     marker,
     ghostStone,
     animate,
+    changed,
     selected,
     selectedLeft,
     selectedRight,
@@ -77,6 +78,7 @@ const Vertex = memo(function Vertex(props) {
             [`shudan-heat_${!!heat && heat.strength}`]: !!heat,
             "shudan-dimmed": dimmed,
             "shudan-animate": animate,
+            "shudan-changed": changed,
 
             [`shudan-paint_${paint > 0 ? 1 : -1}`]: !!paint,
             "shudan-paintedleft": !!paint && signEquals(paintLeft, paint),
