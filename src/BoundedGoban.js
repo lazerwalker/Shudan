@@ -1,4 +1,4 @@
-import { createElement as h, Component } from "preact";
+import { createElement as h, Component } from "react";
 import Goban from "./Goban.js";
 
 export default class BoundedGoban extends Component {

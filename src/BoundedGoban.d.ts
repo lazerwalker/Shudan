@@ -1,4 +1,4 @@
-import type { ComponentClass } from "preact";
+import type { ComponentClass } from "react";
 import type { GobanProps } from "./Goban";
 
 export type BoundedGobanProps = Omit<GobanProps, "vertexSize"> & {

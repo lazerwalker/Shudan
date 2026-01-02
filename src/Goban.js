@@ -1,4 +1,4 @@
-import { createElement as h, Component } from "preact";
+import { createElement as h, Component } from "react";
 import classnames from "classnames";
 
 import {

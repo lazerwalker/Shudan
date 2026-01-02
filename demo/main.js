@@ -1,4 +1,4 @@
-import { h, render, Component } from "preact";
+import { h, render, Component } from "react";
 import Board from "@sabaki/go-board";
 import { Goban } from "../src/main.js";
 

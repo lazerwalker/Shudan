@@ -1,4 +1,4 @@
-import { createElement as h, Component } from "preact";
+import { createElement as h, Component } from "react";
 
 // Relevent for Tenuki. Would want to find a better abstraction.
 const MagicNumberVertexScaleFactor = 40

@@ -1,4 +1,4 @@
-import { createElement as h } from "preact";
+import { createElement as h } from "react";
 
 export default function Marker({ sign, type, label, zIndex }) {
   let containerProps = {

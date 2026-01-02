@@ -17,7 +17,6 @@
     "boardgame",
     "ui",
     "component",
-    "preact",
     "react"
   ],
   "author": "Yichuan Shen",
@@ -26,21 +25,19 @@
     "url": "https://github.com/SabakiHQ/Shudan/issues"
   },
   "homepage": "https://github.com/SabakiHQ/Shudan",
-  "peerDependencies": {
-    "preact": "^8.4.2 || 10.x"
-  },
   "dependencies": {
     "classnames": "^2.3.1"
   },
   "devDependencies": {
     "@sabaki/go-board": "^1.4.2",
     "onchange": "^7.1.0",
-    "preact": "^10.5.14",
     "prettier": "^2.7.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
     "webpack": "^5.52.0",
     "webpack-cli": "^4.8.0"
+  },
+  "peerDependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "prettier": {
     "proseWrap": "always"

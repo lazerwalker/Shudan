@@ -1,4 +1,4 @@
-import type { ComponentClass, JSX } from "preact";
+import type { ComponentClass, JSX } from "react";
 
 export type Vertex = [x: number, y: number];
 
@@ -38,8 +38,8 @@ export interface GobanProps {
   id?: string;
   class?: string;
   className?: string;
-  style?: JSX.CSSProperties;
-  innerProps?: JSX.HTMLAttributes;
+  style?: React.CSSProperties
+  innerProps?: React.HTMLAttributes<HTMLDivElement>;
 
   busy?: boolean;
   vertexSize?: number;
