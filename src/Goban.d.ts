@@ -1,5 +1,5 @@
 import type { ComponentClass, JSX } from "react";
-
+import { diffSignMap } from "./helper";
 export type Vertex = [x: number, y: number];
 
 export type Map<T> = T[][];
@@ -16,6 +16,8 @@ export interface Marker {
     | null;
   label?: string | null;
 }
+
+export function diffSignMap(before: SignMap, after: SignMap): Vertex[];
 
 export interface GhostStone {
   sign: 0 | -1 | 1;
