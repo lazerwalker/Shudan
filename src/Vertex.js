@@ -1,4 +1,4 @@
-import { createElement as h, useCallback } from "react";
+import { createElement as h, useCallback, memo } from "react";
 import classnames from "classnames";
 
 import { avg, vertexEvents, signEquals } from "./helper.js";
@@ -9,7 +9,7 @@ const absoluteStyle = (zIndex) => ({
   zIndex,
 });
 
-export default function Vertex(props) {
+function Vertex(props) {
   let {
     position,
     shift,
@@ -205,3 +205,23 @@ export default function Vertex(props) {
       )
   );
 }
+
+export default memo(Vertex, (prevProps, nextProps) => {
+  // Deep compare position array
+  if (
+    prevProps.position[0] !== nextProps.position[0] ||
+    prevProps.position[1] !== nextProps.position[1]
+  ) {
+    return false; // position changed, re-render
+  }
+
+  // Shallow compare all other props
+  for (let key in nextProps) {
+    if (key === "position") continue;
+    if (prevProps[key] !== nextProps[key]) {
+      return false; // prop changed, re-render
+    }
+  }
+
+  return true; // props equal, skip render
+});
