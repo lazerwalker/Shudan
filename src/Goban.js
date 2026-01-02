@@ -69,7 +69,6 @@ export default class Goban extends Component {
       ghostStoneMap,
       fuzzyStonePlacement = false,
       showCoordinates = false,
-      changedVertices = [],
       lines = [],
       selectedVertices = [],
       dimmedVertices = [],
@@ -173,7 +172,7 @@ export default class Goban extends Component {
                     ghostStone: ghostStoneMap?.[y]?.[x],
                     dimmed: dimmedVertices.some(equalsVertex),
                     animate: animatedVertices.some(equalsVertex),
-                    changed: changedVertices.some(equalsVertex),
+                    changed: this.state.changedVertices.some(equalsVertex),
 
                     paint: paintMap?.[y]?.[x],
                     paintLeft: paintMap?.[y]?.[x - 1],
@@ -268,7 +267,7 @@ Goban.getDerivedStateFromProps = function (props, state) {
       state.clearAnimatedVerticesHandler == null
     ) {
       animatedVertices = diffSignMap(state.signMap, signMap);
-      changedVertices = animatedVertices;
+      changedVertices = [...animatedVertices];
     }
 
     let result = {
