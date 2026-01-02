@@ -27,17 +27,18 @@ export default class Goban extends Component {
     if (
       this.props.animateStonePlacement &&
       !this.state.clearAnimatedVerticesHandler &&
-      this.state.animatedVertices.length > 0
+      this.state.changedVertices.length > 0
     ) {
       // Handle stone animation
 
-      for (let [x, y] of this.state.animatedVertices) {
-        this.state.shiftMap[y][x] = random(7) + 1;
-        readjustShifts(this.state.shiftMap, [x, y]);
+      if (this.state.animatedVertices.length === 0) {
+        for (let [x, y] of this.state.animatedVertices) {
+          this.state.shiftMap[y][x] = random(7) + 1;
+          readjustShifts(this.state.shiftMap, [x, y]);
+        }
+
+        this.setState({ shiftMap: this.state.shiftMap });
       }
-
-      this.setState({ shiftMap: this.state.shiftMap });
-
       // Clear animation classes
 
       this.setState({
@@ -263,17 +264,18 @@ Goban.getDerivedStateFromProps = function (props, state) {
 
     if (
       props.animateStonePlacement &&
-      props.fuzzyStonePlacement &&
       state.clearAnimatedVerticesHandler == null
     ) {
-      animatedVertices = diffSignMap(state.signMap, signMap);
-      changedVertices = [...animatedVertices];
+      changedVertices = diffSignMap(state.signMap, signMap);
+      if (props.fuzzyStonePlacement) {
+        animatedVertices = [...changedVertices];
+      }
     }
 
     let result = {
       signMap,
       animatedVertices,
-      changedVertices
+      changedVertices,
     };
 
     if (
