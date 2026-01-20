@@ -49,6 +49,7 @@ export interface GobanProps {
   rangeY?: [start: number, stop: number];
 
   showCoordinates?: boolean;
+  coordinatesOnOutside?: boolean;
   coordX?: (x: number) => string | number;
   coordY?: (y: number) => string | number;
 

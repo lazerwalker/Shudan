@@ -1,5 +1,9 @@
+.shudan {
+  --shudan-board-border-width: .15em;
+  --shudan-board-without-coords-padding: 0.25em;
+}
+
 .shudan-goban {
-    --shudan-board-border-width: .15em;
     --shudan-board-border-color: #CA933A;
 
     --shudan-board-background-color: #F1B458;
@@ -16,7 +20,7 @@
     color: var(--shudan-board-foreground-color);
   }
   .shudan-goban:not(.shudan-coordinates) {
-    padding: .25em;
+    padding: var(--shudan-board-without-coords-padding)
   }
   .shudan-goban-image {
     background: url('./board.png') var(--shudan-board-background-color);
@@ -24,6 +28,14 @@
 
 .shudan-coordx span, .shudan-coordy span {
   font-size: .6em;
+}
+
+.shudan-coordx.outside {
+  padding-left: calc(var(--shudan-board-border-width) + var(--shudan-board-without-coords-padding));
+}
+
+.shudan-coordy.outside {
+  padding-top: calc(var(--shudan-board-border-width) + var(--shudan-board-without-coords-padding));
 }
 
 .shudan-vertex div {

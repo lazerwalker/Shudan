@@ -70,6 +70,7 @@ export default class Goban extends Component {
       ghostStoneMap,
       fuzzyStonePlacement = false,
       showCoordinates = false,
+      coordinatesOnOutside = false,
       lines = [],
       selectedVertices = [],
       dimmedVertices = [],
@@ -79,175 +80,238 @@ export default class Goban extends Component {
       ...this.state.animatedVertices.map(neighborhood)
     );
 
+    const showCoordinatesInside = showCoordinates && !coordinatesOnOutside;
+    const showCoordinatesOutside = showCoordinates && coordinatesOnOutside;
+
+    const mainContentGrid = showCoordinatesInside
+      ? "1 / 1 / 4 / 4"
+      : showCoordinatesOutside
+      ? "2 / 2"
+      : "1 / 1";
+
     return h(
       "div",
       {
-        ...innerProps,
-        id: this.props.id,
-        className: classnames(
-          "shudan-goban",
-          "shudan-goban-image",
-          {
-            "shudan-busy": busy,
-            "shudan-coordinates": showCoordinates,
-          },
-          this.props.class ?? this.props.className
-        ),
+        className: "shudan",
         style: {
           display: "inline-grid",
           gridTemplateRows: showCoordinates ? "1em 1fr 1em" : "1fr",
           gridTemplateColumns: showCoordinates ? "1em 1fr 1em" : "1fr",
           fontSize: vertexSize,
           lineHeight: "1em",
-          ...(this.props.style ?? {}),
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
         },
       },
 
-      showCoordinates &&
-        h(CoordX, { xs, style: { gridRow: "1", gridColumn: "2" }, coordX }),
-      showCoordinates &&
+      showCoordinatesOutside &&
+        h(CoordX, {
+          xs,
+          style: { gridRow: "1", gridColumn: "2" },
+          coordX,
+          outside: true,
+        }),
+
+      showCoordinatesOutside &&
         h(CoordY, {
           height,
           ys,
           style: { gridRow: "2", gridColumn: "1" },
           coordY,
+          outside: true,
         }),
-
       h(
         "div",
         {
-          className: "shudan-content",
+          ...innerProps,
+          id: this.props.id,
+          className: classnames(
+            "shudan-goban",
+            "shudan-goban-image",
+            {
+              "shudan-busy": busy,
+              "shudan-coordinates": showCoordinatesInside,
+            },
+            this.props.class ?? this.props.className
+          ),
           style: {
-            position: "relative",
-            width: `${xs.length}em`,
-            height: `${ys.length}em`,
-            gridRow: showCoordinates ? "2" : "1",
-            gridColumn: showCoordinates ? "2" : "1",
+            ...(this.props.style ?? {}),
+            display: "inline-grid",
+            gridArea: mainContentGrid,
           },
         },
 
-        h(Grid, {
-          vertexSize,
-          width,
-          height,
-          xs,
-          ys,
-          hoshis,
-        }),
+        showCoordinatesInside &&
+          h(CoordX, { xs, style: { gridRow: "1", gridColumn: "2" }, coordX }),
+
+        showCoordinatesInside &&
+          h(CoordY, {
+            height,
+            ys,
+            style: { gridRow: "2", gridColumn: "1" },
+            coordY,
+          }),
 
         h(
           "div",
           {
-            className: "shudan-vertices",
+            className: "shudan-content",
             style: {
-              display: "grid",
-              gridTemplateColumns: `repeat(${xs.length}, 1em)`,
-              gridTemplateRows: `repeat(${ys.length}, 1em)`,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 1,
+              position: "relative",
+              width: `${xs.length}em`,
+              height: `${ys.length}em`,
+              gridRow: showCoordinates ? "2" : "1",
+              gridColumn: showCoordinates ? "2" : "1",
             },
           },
 
-          ys.map((y) =>
-            xs.map((x) => {
-              let equalsVertex = (v) => vertexEquals(v, [x, y]);
-              let selected = selectedVertices.some(equalsVertex);
-
-              return h(
-                Vertex,
-                Object.assign(
-                  {
-                    key: [x, y].join("-"),
-                    position: [x, y],
-
-                    shift: fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0,
-                    random: randomMap?.[y]?.[x],
-                    sign: signMap?.[y]?.[x],
-
-                    heat: heatMap?.[y]?.[x],
-                    marker: markerMap?.[y]?.[x],
-                    ghostStone: ghostStoneMap?.[y]?.[x],
-                    dimmed: dimmedVertices.some(equalsVertex),
-                    animate: animatedVertices.some(equalsVertex),
-                    changed: this.state.changedVertices.some(equalsVertex),
-
-                    paint: paintMap?.[y]?.[x],
-                    paintLeft: paintMap?.[y]?.[x - 1],
-                    paintRight: paintMap?.[y]?.[x + 1],
-                    paintTop: paintMap?.[y - 1]?.[x],
-                    paintBottom: paintMap?.[y + 1]?.[x],
-                    paintTopLeft: paintMap?.[y - 1]?.[x - 1],
-                    paintTopRight: paintMap?.[y - 1]?.[x + 1],
-                    paintBottomLeft: paintMap?.[y + 1]?.[x - 1],
-                    paintBottomRight: paintMap?.[y + 1]?.[x + 1],
-
-                    selected,
-                    selectedLeft:
-                      selected &&
-                      selectedVertices.some((v) => vertexEquals(v, [x - 1, y])),
-                    selectedRight:
-                      selected &&
-                      selectedVertices.some((v) => vertexEquals(v, [x + 1, y])),
-                    selectedTop:
-                      selected &&
-                      selectedVertices.some((v) => vertexEquals(v, [x, y - 1])),
-                    selectedBottom:
-                      selected &&
-                      selectedVertices.some((v) => vertexEquals(v, [x, y + 1])),
-                  },
-
-                  ...vertexEvents.map((e) => ({
-                    [`on${e}`]: this.props[`onVertex${e}`],
-                  }))
-                )
-              );
-            })
-          )
-        ),
-
-        h(
-          "svg",
-          {
-            className: "shudan-lines",
-            style: {
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              pointerEvents: "none",
-              zIndex: 2,
-            },
-          },
+          h(Grid, {
+            vertexSize,
+            width,
+            height,
+            xs,
+            ys,
+            hoshis,
+          }),
 
           h(
-            "g",
+            "div",
             {
-              transform: `translate(-${rangeX[0] * vertexSize} -${
-                rangeY[0] * vertexSize
-              })`,
+              className: "shudan-vertices",
+              style: {
+                display: "grid",
+                gridTemplateColumns: `repeat(${xs.length}, 1em)`,
+                gridTemplateRows: `repeat(${ys.length}, 1em)`,
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 1,
+              },
             },
 
-            lines.map(({ v1, v2, type }, i) =>
-              h(Line, { key: i, v1, v2, type, vertexSize })
+            ys.map((y) =>
+              xs.map((x) => {
+                let equalsVertex = (v) => vertexEquals(v, [x, y]);
+                let selected = selectedVertices.some(equalsVertex);
+
+                return h(
+                  Vertex,
+                  Object.assign(
+                    {
+                      key: [x, y].join("-"),
+                      position: [x, y],
+
+                      shift: fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0,
+                      random: randomMap?.[y]?.[x],
+                      sign: signMap?.[y]?.[x],
+
+                      heat: heatMap?.[y]?.[x],
+                      marker: markerMap?.[y]?.[x],
+                      ghostStone: ghostStoneMap?.[y]?.[x],
+                      dimmed: dimmedVertices.some(equalsVertex),
+                      animate: animatedVertices.some(equalsVertex),
+                      changed: this.state.changedVertices.some(equalsVertex),
+
+                      paint: paintMap?.[y]?.[x],
+                      paintLeft: paintMap?.[y]?.[x - 1],
+                      paintRight: paintMap?.[y]?.[x + 1],
+                      paintTop: paintMap?.[y - 1]?.[x],
+                      paintBottom: paintMap?.[y + 1]?.[x],
+                      paintTopLeft: paintMap?.[y - 1]?.[x - 1],
+                      paintTopRight: paintMap?.[y - 1]?.[x + 1],
+                      paintBottomLeft: paintMap?.[y + 1]?.[x - 1],
+                      paintBottomRight: paintMap?.[y + 1]?.[x + 1],
+
+                      selected,
+                      selectedLeft:
+                        selected &&
+                        selectedVertices.some((v) =>
+                          vertexEquals(v, [x - 1, y])
+                        ),
+                      selectedRight:
+                        selected &&
+                        selectedVertices.some((v) =>
+                          vertexEquals(v, [x + 1, y])
+                        ),
+                      selectedTop:
+                        selected &&
+                        selectedVertices.some((v) =>
+                          vertexEquals(v, [x, y - 1])
+                        ),
+                      selectedBottom:
+                        selected &&
+                        selectedVertices.some((v) =>
+                          vertexEquals(v, [x, y + 1])
+                        ),
+                    },
+
+                    ...vertexEvents.map((e) => ({
+                      [`on${e}`]: this.props[`onVertex${e}`],
+                    }))
+                  )
+                );
+              })
+            )
+          ),
+
+          h(
+            "svg",
+            {
+              className: "shudan-lines",
+              style: {
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                pointerEvents: "none",
+                zIndex: 2,
+              },
+            },
+
+            h(
+              "g",
+              {
+                transform: `translate(-${rangeX[0] * vertexSize} -${
+                  rangeY[0] * vertexSize
+                })`,
+              },
+
+              lines.map(({ v1, v2, type }, i) =>
+                h(Line, { key: i, v1, v2, type, vertexSize })
+              )
             )
           )
-        )
+        ),
+        showCoordinatesInside &&
+          h(CoordY, {
+            height,
+            ys,
+            style: { gridRow: "2", gridColumn: "3" },
+            coordY,
+          }),
+        showCoordinatesInside &&
+          h(CoordX, {
+            xs,
+            style: { gridRow: "3", gridColumn: "2" },
+            coordX,
+          })
       ),
-
-      showCoordinates &&
+      showCoordinatesOutside &&
         h(CoordY, {
           height,
           ys,
           style: { gridRow: "2", gridColumn: "3" },
           coordY,
+          outside: true,
         }),
-      showCoordinates &&
-        h(CoordX, { xs, style: { gridRow: "3", gridColumn: "2" }, coordX })
+      showCoordinatesOutside &&
+        h(CoordX, { xs, style: { gridRow: "3", gridColumn: "2" }, coordX, outside: true })
     );
   }
 }

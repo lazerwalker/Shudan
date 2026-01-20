@@ -1,5 +1,6 @@
 import { createElement as h, Component } from "react";
 import { alpha } from "./helper.js";
+import classnames from "classnames";
 
 export class CoordX extends Component {
   render() {
@@ -7,12 +8,13 @@ export class CoordX extends Component {
       style,
       xs,
       coordX = (i) => alpha[i] || alpha[alpha.length - 1],
+      outside
     } = this.props;
 
     return h(
       "div",
       {
-        className: "shudan-coordx",
+        className: classnames("shudan-coordx", outside && "outside"),
         style: {
           display: "flex",
           textAlign: "center",
@@ -33,12 +35,12 @@ export class CoordX extends Component {
 
 export class CoordY extends Component {
   render() {
-    let { style, height, ys, coordY = (i) => height - i } = this.props;
+    let { style, height, ys, outside, coordY = (i) => height - i } = this.props;
 
     return h(
       "div",
       {
-        className: "shudan-coordy",
+        className: classnames("shudan-coordy", outside && "outside"),
         style: {
           textAlign: "center",
           ...style,
