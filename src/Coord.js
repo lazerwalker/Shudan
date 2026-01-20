@@ -8,7 +8,7 @@ export class CoordX extends Component {
       style,
       xs,
       coordX = (i) => alpha[i] || alpha[alpha.length - 1],
-      outside
+      outside,
     } = this.props;
 
     return h(
@@ -43,17 +43,38 @@ export class CoordY extends Component {
         className: classnames("shudan-coordy", outside && "outside"),
         style: {
           textAlign: "center",
+          width: "100%",
           ...style,
         },
       },
 
-      ys.map((i) =>
-        h(
+      ys.map((i) => {
+        const text = coordY(i);
+        const isMultiChar = typeof text === "string" && text.length > 1;
+
+        return h(
           "div",
-          { key: i, style: { height: "1em" } },
-          h("span", { style: { display: "block" } }, coordY(i))
-        )
-      )
+          {
+            key: i,
+            style: {
+              height: "1em",
+              textAlign: "center"
+            },
+          },
+          h(
+            "span",
+            {
+              style: {
+                display: "block",
+                ...(isMultiChar
+                  ? { fontSize: "0.45em", lineHeight: "1em", }
+                  : {}),
+              },
+            },
+            (isMultiChar ? text.split("").map((char, index) => h("div", { key: index, style: { height: "1em" } }, char)) : text)
+          )
+        );
+      })
     );
   }
 }
