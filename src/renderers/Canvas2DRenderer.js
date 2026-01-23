@@ -21,6 +21,13 @@ export class Canvas2DRenderer {
     this.canvas.style.width = `${width}px`;
     this.canvas.style.height = `${height}px`;
     this.ctx.scale(dpr, dpr);
+    this.offsetX = 0;
+    this.offsetY = 0;
+  }
+
+  setOffset(x, y) {
+    this.offsetX = x;
+    this.offsetY = y;
   }
 
   clear() {
@@ -31,6 +38,8 @@ export class Canvas2DRenderer {
       this.canvas.width / this.dpr,
       this.canvas.height / this.dpr
     );
+    // Apply offset translation after clearing
+    this.ctx.translate(this.offsetX, this.offsetY);
   }
 
   drawBoard(theme, width, height) {
@@ -44,7 +53,7 @@ export class Canvas2DRenderer {
     }
   }
 
-  drawGrid(xs, ys, hoshis, vertexSize, rangeX, rangeY, theme) {
+  drawGrid(xs, ys, hoshis, vertexSize, rangeX, rangeY, boardWidth, boardHeight, theme) {
     const ctx = this.ctx;
     const lineWidth = theme.gridLineWidth * vertexSize;
 
@@ -53,16 +62,20 @@ export class Canvas2DRenderer {
     const gridWidth = xs.length * vertexSize;
     const gridHeight = ys.length * vertexSize;
 
+    // Check if we're at actual board edges
+    const atLeftEdge = xs[0] === 0;
+    const atRightEdge = xs[xs.length - 1] === boardWidth - 1;
+    const atTopEdge = ys[0] === 0;
+    const atBottomEdge = ys[ys.length - 1] === boardHeight - 1;
+
     // Draw vertical lines
     for (let i = 0; i < xs.length; i++) {
       const x = (i + 0.5) * vertexSize;
-      const isEdge = xs[i] === rangeX[0] || xs[i] === rangeX[1];
 
-      const lineTop = isEdge || ys[0] === rangeY[0] ? 0 : 0.5 * vertexSize;
-      const lineBottom =
-        isEdge || ys[ys.length - 1] === rangeY[1]
-          ? gridHeight
-          : (ys.length - 0.5) * vertexSize;
+      // Lines start at center of first row if at top edge, else extend to canvas edge
+      const lineTop = atTopEdge ? 0.5 * vertexSize : 0;
+      // Lines end at center of last row if at bottom edge, else extend to canvas edge
+      const lineBottom = atBottomEdge ? (ys.length - 0.5) * vertexSize : gridHeight;
 
       ctx.fillRect(x - lineWidth / 2, lineTop, lineWidth, lineBottom - lineTop);
     }
@@ -70,13 +83,11 @@ export class Canvas2DRenderer {
     // Draw horizontal lines
     for (let i = 0; i < ys.length; i++) {
       const y = (i + 0.5) * vertexSize;
-      const isEdge = ys[i] === rangeY[0] || ys[i] === rangeY[1];
 
-      const lineLeft = isEdge || xs[0] === rangeX[0] ? 0 : 0.5 * vertexSize;
-      const lineRight =
-        isEdge || xs[xs.length - 1] === rangeX[1]
-          ? gridWidth
-          : (xs.length - 0.5) * vertexSize;
+      // Lines start at center of first column if at left edge, else extend to canvas edge
+      const lineLeft = atLeftEdge ? 0.5 * vertexSize : 0;
+      // Lines end at center of last column if at right edge, else extend to canvas edge
+      const lineRight = atRightEdge ? (xs.length - 0.5) * vertexSize : gridWidth;
 
       ctx.fillRect(lineLeft, y - lineWidth / 2, lineRight - lineLeft, lineWidth);
     }
@@ -132,18 +143,12 @@ export class Canvas2DRenderer {
         stoneSize + shadowPadding * 2
       );
     } else if (stoneImages && stoneImages[random]) {
+      // Draw stone image with shadow
       if (theme.stoneShadow) {
-        ctx.save();
         ctx.shadowColor = theme.stoneShadow.color;
         ctx.shadowBlur = theme.stoneShadow.blur * vertexSize;
         ctx.shadowOffsetX = theme.stoneShadow.dx * vertexSize;
         ctx.shadowOffsetY = theme.stoneShadow.dy * vertexSize;
-
-        ctx.beginPath();
-        ctx.arc(drawX, drawY, stoneRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(0,0,0,0.4)";
-        ctx.fill();
-        ctx.restore();
       }
 
       ctx.drawImage(
@@ -154,18 +159,12 @@ export class Canvas2DRenderer {
         stoneSize
       );
     } else {
+      // Fallback: draw solid colored circle with shadow
       if (theme.stoneShadow) {
-        ctx.save();
         ctx.shadowColor = theme.stoneShadow.color;
         ctx.shadowBlur = theme.stoneShadow.blur * vertexSize;
         ctx.shadowOffsetX = theme.stoneShadow.dx * vertexSize;
         ctx.shadowOffsetY = theme.stoneShadow.dy * vertexSize;
-
-        ctx.beginPath();
-        ctx.arc(drawX, drawY, stoneRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(0,0,0,0.4)";
-        ctx.fill();
-        ctx.restore();
       }
 
       ctx.beginPath();
@@ -177,12 +176,16 @@ export class Canvas2DRenderer {
     ctx.restore();
   }
 
-  drawMarker(x, y, marker, sign, vertexSize, rangeX, rangeY, theme) {
+  drawMarker(x, y, marker, sign, vertexSize, rangeX, rangeY, theme, shift = 0) {
     if (!marker.type) return;
 
     const ctx = this.ctx;
-    const cx = (x - rangeX[0] + 0.5) * vertexSize;
-    const cy = (y - rangeY[0] + 0.5) * vertexSize;
+    const shiftOffset = shiftOffsets[shift] || shiftOffsets[0];
+    const baseX = (x - rangeX[0] + 0.5) * vertexSize;
+    const baseY = (y - rangeY[0] + 0.5) * vertexSize;
+    // Apply shift only for markers on stones (sign !== 0)
+    const cx = sign !== 0 ? baseX + shiftOffset.x * vertexSize : baseX;
+    const cy = sign !== 0 ? baseY + shiftOffset.y * vertexSize : baseY;
 
     const offset = sign !== 0 ? 0 : 0.04 * vertexSize;
     const markerSize = vertexSize - offset * 2;
@@ -265,7 +268,8 @@ export class Canvas2DRenderer {
             ? theme.whiteFgColor
             : theme.boardFgColor;
         ctx.beginPath();
-        ctx.arc(cx, cy, markerRadius * 0.2, 0, Math.PI * 2);
+        // Match DOM SVG: r=0.18 in viewBox 0-1, so radius is 0.18 * vertexSize
+        ctx.arc(cx, cy, 0.18 * vertexSize, 0, Math.PI * 2);
         ctx.fill();
         break;
 

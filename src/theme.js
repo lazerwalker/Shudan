@@ -1,3 +1,42 @@
+// Inline SVG data URLs for default stone images
+const BLACK_STONE_SVG = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="43" height="43" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#636363" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#636363" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#0b0b0b"/>
+      <stop offset="1" stop-color="#443432"/>
+    </linearGradient>
+    <linearGradient id="c" x1="0" x2="0" y1="43" y2="0" xlink:href="#a" gradientUnits="userSpaceOnUse"/>
+    <linearGradient id="d" x1="0" x2="0" y1="2.38" y2="19.27" xlink:href="#b" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <g>
+    <circle cx="21.5" cy="21.5" r="20.5" fill="url(#c)" stroke="#000" stroke-width="1"/>
+    <circle cx="21.5" cy="21.5" r="18.5" fill="url(#d)" />
+  </g>
+</svg>`)}`;
+
+const WHITE_STONE_SVG = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="43" height="43" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#eee" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#eee" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#C9D1FF"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+    <linearGradient id="c" x1="0" x2="0" y1="43" y2="0" xlink:href="#a" gradientUnits="userSpaceOnUse" />
+    <linearGradient id="d" x1="0" x2="0" y1="40.65" y2="30.65" xlink:href="#b" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <g>
+    <circle cx="21.5" cy="21.5" r="20.5" fill="url(#c)" stroke="#c3c3c3" stroke-width="1"/>
+    <circle cx="21.5" cy="21.5" r="18.5" fill="url(#d)" />
+  </g>
+</svg>`)}`;
+
 // Default CSS custom property values (from goban.css)
 const DEFAULT_COLORS = {
   boardBgColor: "#F1B458",
@@ -79,6 +118,8 @@ function extractColorsFromCSS(style) {
  * Load an image from a URL.
  */
 function loadImage(url) {
+  if (!url) return Promise.resolve(null);
+
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -144,7 +185,6 @@ function prerenderStones(images, shadow, size) {
  */
 export async function loadTheme(containerEl, options = {}) {
   const {
-    basePath = "",
     stonePreRenderSize = 50,
     stoneShadow = DEFAULT_STONE_SHADOW,
   } = options;
@@ -153,20 +193,20 @@ export async function loadTheme(containerEl, options = {}) {
   const style = getComputedStyle(containerEl);
   const colors = extractColorsFromCSS(style);
 
-  // Determine image URLs
+  // Determine image URLs - use provided URLs or fall back to inlined SVGs
   const blackStoneUrls = options.blackStoneUrls ?? [
-    `${basePath}stone_1.svg`,
-    `${basePath}stone_1.svg`,
-    `${basePath}stone_1.svg`,
-    `${basePath}stone_1.svg`,
+    BLACK_STONE_SVG,
+    BLACK_STONE_SVG,
+    BLACK_STONE_SVG,
+    BLACK_STONE_SVG,
   ];
   const whiteStoneUrls = options.whiteStoneUrls ?? [
-    `${basePath}stone_-1.svg`,
-    `${basePath}stone_-1.svg`,
-    `${basePath}stone_-1.svg`,
-    `${basePath}stone_-1.svg`,
+    WHITE_STONE_SVG,
+    WHITE_STONE_SVG,
+    WHITE_STONE_SVG,
+    WHITE_STONE_SVG,
   ];
-  const boardImageUrl = options.boardImageUrl ?? `${basePath}board.png`;
+  const boardImageUrl = options.boardImageUrl ?? null;
 
   // Load all images in parallel
   const [boardImage, ...stoneImages] = await Promise.all([

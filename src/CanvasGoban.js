@@ -2,6 +2,7 @@ import {
   createElement as h,
   useRef,
   useEffect,
+  useLayoutEffect,
   useState,
   useCallback,
   useMemo,
@@ -24,6 +25,10 @@ import A11yGrid from "./A11yGrid.js";
 import { Canvas2DRenderer } from "./renderers/Canvas2DRenderer.js";
 import { loadTheme, createDefaultTheme } from "./theme.js";
 import { getVertexFromPoint } from "./coordinates.js";
+
+// Padding for fuzzy stone overflow (as fraction of vertexSize)
+// Max shift is 0.07, stone extends 0.46 from center, so ~0.07 overflow possible
+const FUZZY_PADDING = 0.1;
 
 // Get neighbor info for paint/selection rendering
 function getNeighborInfo(x, y, map, selectedVertices) {
@@ -154,8 +159,8 @@ export default function CanvasGoban(props) {
     };
   }, []);
 
-  // Handle signMap changes
-  useEffect(() => {
+  // Handle signMap changes - use useLayoutEffect for synchronous updates
+  useLayoutEffect(() => {
     if (width === 0 || height === 0) return;
 
     const prevMap = prevSignMapRef.current;
@@ -174,8 +179,9 @@ export default function CanvasGoban(props) {
       if (changed.length > 0 && changed.length <= maxStonesToAnimate) {
         const newShiftMap = [...shiftMap.map((row) => [...row])];
         for (const [x, y] of changed) {
+          // Assign a random shift (1-8) for the new stone, but DON'T readjust neighbors
+          // to avoid visual "jumping" of previously-placed stones
           newShiftMap[y][x] = random(7) + 1;
-          readjustShifts(newShiftMap, [x, y]);
         }
         setShiftMap(newShiftMap);
 
@@ -205,22 +211,31 @@ export default function CanvasGoban(props) {
     maxStonesToAnimate,
   ]);
 
-  // Render canvas
-  useEffect(() => {
+  // Render canvas - use useLayoutEffect for synchronous updates with animation state
+  useLayoutEffect(() => {
     const renderer = rendererRef.current;
-    const currentTheme = theme ?? createDefaultTheme();
 
-    if (!renderer || xs.length === 0 || ys.length === 0) return;
+    // Wait for theme to load before rendering (avoids flash of unstyled stones)
+    if (!renderer || !theme || xs.length === 0 || ys.length === 0) return;
 
-    const canvasWidth = xs.length * vertexSize;
-    const canvasHeight = ys.length * vertexSize;
+    const currentTheme = theme;
+
+    // Add padding for fuzzy stone overflow
+    const padding = fuzzyStonePlacement ? FUZZY_PADDING * vertexSize : 0;
+    const boardWidth = xs.length * vertexSize;
+    const boardHeight = ys.length * vertexSize;
+    const canvasWidth = boardWidth + padding * 2;
+    const canvasHeight = boardHeight + padding * 2;
     const dpr = window.devicePixelRatio || 1;
 
     renderer.setSize(canvasWidth, canvasHeight, dpr);
     renderer.clear();
 
-    renderer.drawBoard(currentTheme, canvasWidth, canvasHeight);
-    renderer.drawGrid(xs, ys, hoshis, vertexSize, rangeX, rangeY, currentTheme);
+    // Offset all drawing by padding
+    renderer.setOffset(padding, padding);
+
+    renderer.drawBoard(currentTheme, boardWidth, boardHeight);
+    renderer.drawGrid(xs, ys, hoshis, vertexSize, rangeX, rangeY, width, height, currentTheme);
 
     // Draw paint map
     if (paintMap) {
@@ -290,11 +305,12 @@ export default function CanvasGoban(props) {
       }
     }
 
-    // Draw stones
+    // Draw stones (skip stones that are currently animating via DOM overlay)
     for (const y of ys) {
       for (const x of xs) {
         const sign = signMap[y]?.[x];
         if (sign === 1 || sign === -1) {
+          // Skip stones that are animating - they're rendered as DOM overlays
           if (animation.animatedVertices.some((v) => vertexEquals(v, [x, y]))) {
             continue;
           }
@@ -327,6 +343,7 @@ export default function CanvasGoban(props) {
           if (sign !== 0) {
             const marker = markerMap[y]?.[x];
             if (marker && marker.type !== "loader") {
+              const shift = fuzzyStonePlacement ? (shiftMap[y]?.[x] ?? 0) : 0;
               renderer.drawMarker(
                 x,
                 y,
@@ -335,7 +352,8 @@ export default function CanvasGoban(props) {
                 vertexSize,
                 rangeX,
                 rangeY,
-                currentTheme
+                currentTheme,
+                shift
               );
             }
           }
@@ -389,6 +407,8 @@ export default function CanvasGoban(props) {
     vertexSize,
     rangeX,
     rangeY,
+    width,
+    height,
     signMap,
     markerMap,
     paintMap,
@@ -408,16 +428,19 @@ export default function CanvasGoban(props) {
       if (!canvasRef.current) return null;
 
       const rect = canvasRef.current.getBoundingClientRect();
+      const padding = fuzzyStonePlacement ? FUZZY_PADDING * vertexSize : 0;
       return getVertexFromPoint(
         evt.clientX,
         evt.clientY,
         rect,
         vertexSize,
         rangeX,
-        rangeY
+        rangeY,
+        padding,
+        padding
       );
     },
-    [vertexSize, rangeX, rangeY]
+    [vertexSize, rangeX, rangeY, fuzzyStonePlacement]
   );
 
   // Handle pointer move for enter/leave events
@@ -638,6 +661,7 @@ export default function CanvasGoban(props) {
             height: `${ys.length}em`,
             gridRow: showCoordinates ? "2" : "1",
             gridColumn: showCoordinates ? "2" : "1",
+            overflow: "visible",
           },
         },
 
@@ -645,8 +669,9 @@ export default function CanvasGoban(props) {
           ref: canvasRef,
           style: {
             position: "absolute",
-            top: 0,
-            left: 0,
+            // Offset canvas by padding to align board with layout
+            top: fuzzyStonePlacement ? `${-FUZZY_PADDING}em` : 0,
+            left: fuzzyStonePlacement ? `${-FUZZY_PADDING}em` : 0,
           },
           onClick: handleClick,
           onMouseMove: handleMouseMove,
