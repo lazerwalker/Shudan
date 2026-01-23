@@ -1,48 +1,11 @@
 import type { FunctionComponent } from "react";
-import { diffSignMap } from "./helper";
-export type Vertex = [x: number, y: number];
+import type { Vertex, Map, Marker, GhostStone, HeatVertex, LineMarker, CanvasTheme } from "./types";
 
-export type Map<T> = T[][];
-
-export interface Marker {
-  type?:
-    | "circle"
-    | "cross"
-    | "triangle"
-    | "square"
-    | "point"
-    | "loader"
-    | "label"
-    | null;
-  label?: string | null;
-}
-
-export function diffSignMap(before: SignMap, after: SignMap): Vertex[];
-
-export interface GhostStone {
-  sign: 0 | -1 | 1;
-  type?: "good" | "interesting" | "doubtful" | "bad" | null;
-  faint?: boolean | null;
-}
-
-export interface HeatVertex {
-  strength: number;
-  text?: string | null;
-}
-
-export interface LineMarker {
-  v1: Vertex;
-  v2: Vertex;
-  type?: "line" | "arrow";
-}
-
-import type { CanvasTheme } from "./types";
-
-export interface GobanProps {
+export interface CanvasGobanProps {
   id?: string;
   class?: string;
   className?: string;
-  style?: React.CSSProperties
+  style?: React.CSSProperties;
   innerProps?: React.HTMLAttributes<HTMLDivElement>;
 
   busy?: boolean;
@@ -81,15 +44,13 @@ export interface GobanProps {
   onVertexPointerEnter?: (evt: PointerEvent, vertex: Vertex) => void;
   onVertexPointerLeave?: (evt: PointerEvent, vertex: Vertex) => void;
 
-  renderer?: 'dom' | 'canvas';
-
-  // Canvas-specific props (only used when renderer='canvas')
+  // Canvas-specific props
   theme?: CanvasTheme;
   maxStonesToAnimate?: number;
   enableA11y?: boolean;
   onVertexLongPress?: (evt: PointerEvent, vertex: Vertex) => void;
 }
 
-declare const Goban: FunctionComponent<GobanProps>;
+declare const CanvasGoban: FunctionComponent<CanvasGobanProps>;
 
-export default Goban;
+export default CanvasGoban;
