@@ -2,7 +2,24 @@ import { createElement as h, Component } from "react";
 import { alpha } from "./helper.js";
 import classnames from "classnames";
 
-export class CoordX extends Component {
+// TODO: Can probably make this a single coordprops, with ns and coord
+
+interface CoordXProps {
+  style?: React.CSSProperties;
+  xs: number[];
+  coordX?: (i: number) => string | number;
+  outside?: boolean;
+}
+
+interface CoordYProps {
+  style?: React.CSSProperties;
+  height: number;
+  ys: number[];
+  coordY?: (i: number) => string | number;
+  outside?: boolean;
+}
+
+export class CoordX extends Component<CoordXProps> {
   render() {
     let {
       style,
@@ -33,7 +50,7 @@ export class CoordX extends Component {
   }
 }
 
-export class CoordY extends Component {
+export class CoordY extends Component<CoordYProps> {
   render() {
     let { style, height, ys, outside, coordY = (i) => height - i } = this.props;
 

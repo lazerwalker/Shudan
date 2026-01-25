@@ -1,10 +1,21 @@
 {
   "name": "@sabaki/shudan",
   "version": "1.7.1",
-  "description": "A highly customizable, low-level Preact Goban component.",
+  "description": "A highly customizable, low-level React Goban component.",
   "type": "module",
-  "main": "./src/main.js",
-  "types": "./src/main.d.ts",
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/main.d.ts",
+      "import": "./dist/main.js"
+    },
+    "./css/*": "./css/*"
+  },
+  "files": [
+    "dist",
+    "css"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SabakiHQ/Shudan.git"
@@ -30,8 +41,11 @@
   },
   "devDependencies": {
     "@sabaki/go-board": "^1.4.2",
+    "@types/react": "^19.2.9",
+    "@types/react-dom": "^19.0.0",
     "onchange": "^7.1.0",
     "prettier": "^2.7.1",
+    "typescript": "^5.7.0",
     "webpack": "^5.52.0",
     "webpack-cli": "^4.8.0"
   },
@@ -43,11 +57,11 @@
     "proseWrap": "always"
   },
   "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
     "build-demo": "webpack --entry ./demo/main.js -o ./demo --output-filename bundle.js --progress --mode production",
     "watch-demo": "webpack --entry ./demo/main.js -o ./demo --output-filename bundle.js --progress --mode development --watch",
-    "build-demo-react": "webpack --entry ./demo-react/main.js --resolve-alias preact=react -o ./demo-react --output-filename bundle.js --progress --mode production",
-    "watch-demo-react": "webpack --entry ./demo-react/main.js --resolve-alias preact=react -o ./demo-react --output-filename bundle.js --progress --mode development --watch",
-    "format": "prettier \"**/*.{js,html,md}\" --write",
-    "format-watch": "onchange \"**/*.{js,html,md}\" -- prettier --write {{changed}}"
+    "format": "prettier \"**/*.{js,ts,tsx,html,md}\" --write",
+    "format-watch": "onchange \"**/*.{js,ts,tsx,html,md}\" -- prettier --write {{changed}}"
   }
 }

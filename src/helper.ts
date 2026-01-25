@@ -1,3 +1,12 @@
+export type Vertex = [x: number, y: number];
+
+export enum Sign {
+  Empty = 0,
+  Black = 1,
+  White = -1,
+}
+
+
 export const alpha = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
 export const vertexEvents = [
   "Click",
@@ -13,17 +22,17 @@ export const vertexEvents = [
   "PointerLeave",
 ];
 
-export const avg = (xs) =>
+export const avg = (xs: number[]): number =>
   xs.length === 0 ? 0 : xs.reduce((sum, x) => sum + x, 0) / xs.length;
 
-export const range = (n) =>
+export const range = (n: number): number[] =>
   Array(n)
     .fill(0)
     .map((_, i) => i);
 
-export const random = (n) => Math.floor(Math.random() * (n + 1));
+export const random = (n: number): number => Math.floor(Math.random() * (n + 1));
 
-export const neighborhood = ([x, y]) => [
+export const neighborhood = ([x, y]: Vertex): Vertex[] => [
   [x, y],
   [x - 1, y],
   [x + 1, y],
@@ -31,22 +40,23 @@ export const neighborhood = ([x, y]) => [
   [x, y + 1],
 ];
 
-export const vertexEquals = ([x1, y1], [x2, y2]) => x1 === x2 && y1 === y2;
+export const vertexEquals = ([x1, y1]: Vertex, [x2, y2]: Vertex): boolean => x1 === x2 && y1 === y2;
 
-export const lineEquals = ([v1, w1], [v2, w2]) =>
+export const lineEquals = ([v1, w1]: [Vertex, Vertex], [v2, w2]: [Vertex, Vertex]): boolean =>
   vertexEquals(v1, v2) && vertexEquals(w1, w2);
 
-export const signEquals = (...xs) =>
-  xs.length === 0 ? true : xs.every((x) => Math.sign(x) === Math.sign(xs[0]));
+// We're type-coercing here, but it's fine, Math.sign(undefined) is NaN and will return false anyway unless they're all undefined
+export const signEquals = (...xs: (number | undefined)[]): boolean =>
+  xs.length === 0 ? true : xs.every((x) => Math.sign(x!) === Math.sign(xs[0]!));
 
-export function getHoshis(width, height) {
+export function getHoshis(width: number, height: number): Vertex[] {
   if (Math.min(width, height) <= 6) return [];
 
   let [nearX, nearY] = [width, height].map((x) => (x >= 13 ? 3 : 2));
   let [farX, farY] = [width - nearX - 1, height - nearY - 1];
   let [middleX, middleY] = [width, height].map((x) => (x - 1) / 2);
 
-  let result = [
+  let result: Vertex[] = [
     [nearX, farY],
     [farX, nearY],
     [farX, farY],
@@ -63,7 +73,7 @@ export function getHoshis(width, height) {
   return result;
 }
 
-export function readjustShifts(shiftMap, vertex = null) {
+export function readjustShifts(shiftMap: number[][], vertex: Vertex | null = null) {
   if (vertex == null) {
     for (let y = 0; y < shiftMap.length; y++) {
       for (let x = 0; x < shiftMap[0].length; x++) {
@@ -113,7 +123,7 @@ export function readjustShifts(shiftMap, vertex = null) {
   return shiftMap;
 }
 
-export function diffSignMap(before, after) {
+export function diffSignMap(before: number[][], after: number[][]): Vertex[] {
   if (
     before === after ||
     before.length === 0 ||
@@ -123,7 +133,7 @@ export function diffSignMap(before, after) {
     return [];
   }
 
-  let result = [];
+  let result: Vertex[]   = [];
 
   for (let y = 0; y < before.length; y++) {
     for (let x = 0; x < before[0].length; x++) {

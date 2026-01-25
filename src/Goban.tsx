@@ -1,6 +1,10 @@
 import { createElement as h, Component } from "react";
 import classnames from "classnames";
 
+export { diffSignMap } from "./helper.js";
+export type Map<T> = T[][];
+
+
 import {
   random,
   readjustShifts,
@@ -10,17 +14,143 @@ import {
   diffSignMap,
   range,
   getHoshis,
+  type Vertex as VertexData
 } from "./helper.js";
 import { CoordX, CoordY } from "./Coord.js";
 import Grid from "./Grid.js";
-import Vertex from "./Vertex.js";
-import Line from "./Line.js";
+import Vertex, { GhostStone, HeatVertex } from "./Vertex.js";
+import Line, { LineMarker } from "./Line.js";
+import { Marker } from "./Marker.js";
 
-export default class Goban extends Component {
-  constructor(props) {
+export interface GobanProps {
+  id?: string;
+  class?: string;
+  className?: string;
+  style?: React.CSSProperties
+  innerProps?: React.ComponentPropsWithRef<'div'>;
+
+  busy?: boolean;
+  vertexSize?: number;
+  rangeX?: [start: number, stop: number];
+  rangeY?: [start: number, stop: number];
+
+  showCoordinates?: boolean;
+  coordinatesOnOutside?: boolean;
+  coordX?: (x: number) => string | number;
+  coordY?: (y: number) => string | number;
+
+  fuzzyStonePlacement?: boolean;
+  animateStonePlacement?: boolean;
+
+  signMap?: Map<0 | 1 | -1>;
+  markerMap?: Map<Marker | null>;
+  paintMap?: Map<0 | 1 | -1>;
+  ghostStoneMap?: Map<GhostStone | null>;
+  heatMap?: Map<HeatVertex | null>;
+
+  selectedVertices?: VertexData[];
+  dimmedVertices?: VertexData[];
+  lines?: LineMarker[];
+
+  onVertexClick?: (evt: MouseEvent, vertex: VertexData) => void;
+  onVertexMouseUp?: (evt: MouseEvent, vertex: VertexData) => void;
+  onVertexMouseDown?: (evt: MouseEvent, vertex: VertexData) => void;
+  onVertexMouseMove?: (evt: MouseEvent, vertex: VertexData) => void;
+  onVertexMouseEnter?: (evt: MouseEvent, vertex: VertexData) => void;
+  onVertexMouseLeave?: (evt: MouseEvent, vertex: VertexData) => void;
+  onVertexPointerUp?: (evt: PointerEvent, vertex: VertexData) => void;
+  onVertexPointerDown?: (evt: PointerEvent, vertex: VertexData) => void;
+  onVertexPointerMove?: (evt: PointerEvent, vertex: VertexData) => void;
+  onVertexPointerEnter?: (evt: PointerEvent, vertex: VertexData) => void;
+  onVertexPointerLeave?: (evt: PointerEvent, vertex: VertexData) => void;
+
+  animationDuration?: number;
+}
+
+interface GobanState {
+  width: number;
+  height: number;
+  rangeX: [number, number];
+  rangeY: [number, number];
+  xs: number[];
+  ys: number[];
+  hoshis: VertexData[]
+  shiftMap: number[][];
+  randomMap: number[][];
+  signMap: Map<0 | 1 | -1>;
+  animatedVertices: VertexData[];
+  changedVertices: VertexData[];
+  clearAnimatedVerticesHandler: ReturnType<typeof setTimeout> | null;
+}
+
+export default class Goban extends Component<GobanProps, GobanState> {
+  static getDerivedStateFromProps = function(props: GobanProps, state: GobanState) {
+  let { signMap = [], rangeX = [0, Infinity], rangeY = [0, Infinity] } = props;
+
+  let width = signMap.length === 0 ? 0 : signMap[0].length;
+  let height = signMap.length;
+
+  if (state.width === width && state.height === height) {
+    let animatedVertices = state.animatedVertices;
+    let changedVertices = state.changedVertices;
+
+    if (
+      props.animateStonePlacement &&
+      state.clearAnimatedVerticesHandler == null
+    ) {
+      changedVertices = diffSignMap(state.signMap, signMap);
+      if (props.fuzzyStonePlacement) {
+        animatedVertices = [...changedVertices];
+      }
+    }
+
+    let result = {
+      signMap,
+      animatedVertices,
+      changedVertices,
+    };
+
+    if (
+      !vertexEquals(state.rangeX, rangeX) ||
+      !vertexEquals(state.rangeY, rangeY)
+    ) {
+      // Range changed
+
+      Object.assign(result, {
+        rangeX,
+        rangeY,
+        xs: range(width).slice(rangeX[0], rangeX[1] + 1),
+        ys: range(height).slice(rangeY[0], rangeY[1] + 1),
+      });
+    }
+
+    return result;
+  }
+
+  // Board size changed
+
+  return {
+    signMap,
+    width,
+    height,
+    rangeX,
+    rangeY,
+    animatedVertices: [],
+    changedVertices: [],
+    clearAnimatedVerticesHandler: null,
+    xs: range(width).slice(rangeX[0], rangeX[1] + 1),
+    ys: range(height).slice(rangeY[0], rangeY[1] + 1),
+    hoshis: getHoshis(width, height),
+    shiftMap: readjustShifts(signMap.map((row) => row.map((_) => random(8)))),
+    randomMap: signMap.map((row) => row.map((_) => random(4))),
+  };
+};
+
+
+  constructor(props: GobanProps) {
     super(props);
 
-    this.state = {};
+    this.state = {} as GobanState
   }
 
   componentDidUpdate() {
@@ -76,7 +206,7 @@ export default class Goban extends Component {
       dimmedVertices = [],
     } = this.props;
 
-    let animatedVertices = [].concat(
+    let animatedVertices = ([] as VertexData[]).concat(
       ...this.state.animatedVertices.map(neighborhood)
     );
 
@@ -196,7 +326,7 @@ export default class Goban extends Component {
 
             ys.map((y) =>
               xs.map((x) => {
-                let equalsVertex = (v) => vertexEquals(v, [x, y]);
+                let equalsVertex = (v: VertexData) => vertexEquals(v, [x, y]);
                 let selected = selectedVertices.some(equalsVertex);
 
                 return h(
@@ -251,7 +381,7 @@ export default class Goban extends Component {
                     },
 
                     ...vertexEvents.map((e) => ({
-                      [`on${e}`]: this.props[`onVertex${e}`],
+                      [`on${e}`]: (this.props as any)[`onVertex${e}`],
                     }))
                   )
                 );
@@ -315,65 +445,3 @@ export default class Goban extends Component {
     );
   }
 }
-
-Goban.getDerivedStateFromProps = function (props, state) {
-  let { signMap = [], rangeX = [0, Infinity], rangeY = [0, Infinity] } = props;
-
-  let width = signMap.length === 0 ? 0 : signMap[0].length;
-  let height = signMap.length;
-
-  if (state.width === width && state.height === height) {
-    let animatedVertices = state.animatedVertices;
-    let changedVertices = state.changedVertices;
-
-    if (
-      props.animateStonePlacement &&
-      state.clearAnimatedVerticesHandler == null
-    ) {
-      changedVertices = diffSignMap(state.signMap, signMap);
-      if (props.fuzzyStonePlacement) {
-        animatedVertices = [...changedVertices];
-      }
-    }
-
-    let result = {
-      signMap,
-      animatedVertices,
-      changedVertices,
-    };
-
-    if (
-      !vertexEquals(state.rangeX, rangeX) ||
-      !vertexEquals(state.rangeY, rangeY)
-    ) {
-      // Range changed
-
-      Object.assign(result, {
-        rangeX,
-        rangeY,
-        xs: range(width).slice(rangeX[0], rangeX[1] + 1),
-        ys: range(height).slice(rangeY[0], rangeY[1] + 1),
-      });
-    }
-
-    return result;
-  }
-
-  // Board size changed
-
-  return {
-    signMap,
-    width,
-    height,
-    rangeX,
-    rangeY,
-    animatedVertices: [],
-    changedVertices: [],
-    clearAnimatedVerticesHandler: null,
-    xs: range(width).slice(rangeX[0], rangeX[1] + 1),
-    ys: range(height).slice(rangeY[0], rangeY[1] + 1),
-    hoshis: getHoshis(width, height),
-    shiftMap: readjustShifts(signMap.map((row) => row.map((_) => random(8)))),
-    randomMap: signMap.map((row) => row.map((_) => random(4))),
-  };
-};

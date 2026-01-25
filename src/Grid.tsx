@@ -1,10 +1,20 @@
 import { createElement as h, Component } from "react";
+import { type Vertex } from "./helper.js";
 
 // Relevent for Tenuki. Would want to find a better abstraction.
 const MagicNumberVertexScaleFactor = 40
 
-export default class Grid extends Component {
-  shouldComponentUpdate(nextProps) {
+export interface GridProps {
+  vertexSize: number;
+  width: number;
+  height: number;
+  xs: number[];
+  ys: number[];
+  hoshis: Vertex[];
+}
+
+export default class Grid extends Component<GridProps> {
+  shouldComponentUpdate(nextProps: GridProps) {
     return (
       nextProps.vertexSize !== this.props.vertexSize ||
       nextProps.width !== this.props.width ||

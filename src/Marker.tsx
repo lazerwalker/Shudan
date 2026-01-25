@@ -1,6 +1,29 @@
 import { createElement as h } from "react";
+import { Sign } from "./helper.js";
 
-export default function Marker({ sign, type, label, zIndex }) {
+export interface Marker {
+  type?:
+    | "circle"
+    | "cross"
+    | "triangle"
+    | "square"
+    | "point"
+    | "loader"
+    | "label"
+    | null;
+  label?: string | null;
+}
+
+interface MarkerProps extends Marker {
+  sign: Sign;
+  zIndex?: number;
+}
+export default function Marker({
+  sign,
+  type,
+  label,
+  zIndex,
+}: MarkerProps) {
   let containerProps = {
     className: "shudan-marker",
     style: {

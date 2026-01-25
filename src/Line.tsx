@@ -1,8 +1,18 @@
 import { createElement as h, Component } from "react";
-import { vertexEquals } from "./helper.js";
+import { Vertex, vertexEquals } from "./helper.js";
 
-export default class Line extends Component {
-  shouldComponentUpdate(nextProps) {
+export interface LineMarker {
+  v1: Vertex;
+  v2: Vertex;
+  type?: "line" | "arrow";
+}
+
+export interface LineMarkerProps extends LineMarker {
+  vertexSize: number;
+}
+
+export default class Line extends Component<LineMarkerProps> {
+  shouldComponentUpdate(nextProps: LineMarkerProps) {
     let { v1, v2, type, vertexSize } = this.props;
 
     return (

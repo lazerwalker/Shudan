@@ -1,4 +1,5 @@
 node_modules/
+dist/
 demo/bundle.js
 demo/*.LICENSE.txt
 demo-react/bundle.js

@@ -1,15 +1,57 @@
-import { createElement as h, useCallback, memo } from "react";
+import { createElement as h, useCallback, memo, CSSProperties } from "react";
 import classnames from "classnames";
 
-import { avg, vertexEvents, signEquals } from "./helper.js";
-import Marker from "./Marker.js";
+import { avg, vertexEvents, signEquals, Sign } from "./helper.js";
+import Marker, { type Marker as MarkerData } from "./Marker.js";
 
-const absoluteStyle = (zIndex) => ({
+export interface GhostStone {
+  sign: 0 | -1 | 1;
+  type?: "good" | "interesting" | "doubtful" | "bad" | null;
+  faint?: boolean | null;
+}
+
+export interface HeatVertex {
+  strength: number;
+  text?: string | null;
+}
+
+type VertexProps = {
+  position: [number, number];
+  shift?: "left" | "right" | "up" | "down";
+  random?: number;
+  sign: Sign;
+  heat?: HeatVertex;
+
+  paint?: number;
+  paintLeft?: number;
+  paintRight?: number;
+  paintTop?: number;
+  paintBottom?: number;
+  paintTopLeft?: number;
+  paintTopRight?: number;
+  paintBottomLeft?: number;
+  paintBottomRight?: number;
+
+  dimmed?: boolean;
+  marker?: MarkerData;
+  ghostStone?: GhostStone;
+
+  animate?: boolean;
+  changed?: boolean;
+  selected?: boolean;
+
+  selectedLeft?: boolean;
+  selectedRight?: boolean;
+  selectedTop?: boolean;
+  selectedBottom?: boolean;
+};
+
+const absoluteStyle = (zIndex?: number): CSSProperties => ({
   position: "absolute",
   zIndex,
 });
 
-function Vertex(props) {
+function Vertex(props: VertexProps) {
   let {
     position,
     shift,
@@ -37,18 +79,19 @@ function Vertex(props) {
     selectedBottom,
   } = props;
 
-  let eventHandlers = {};
+  let eventHandlers: { [key: string]: (evt: any) => void } = {};
 
+  // TODO: Unsure this is actually doing what we want it to (and breaks hooks rule if ordering changes?)
   for (let eventName of vertexEvents) {
     eventHandlers[eventName] = useCallback(
       (evt) => {
-        props[`on${eventName}`]?.(evt, position);
+        (props as any)[`on${eventName}`]?.(evt, position);
       },
-      [...position, props[`on${eventName}`]]
+      [...position, (props as any)[`on${eventName}`]]
     );
   }
 
-  let markerMarkup = (zIndex) =>
+  let markerMarkup = (zIndex?: number) =>
     !!marker &&
     h(Marker, {
       key: "marker",
@@ -80,7 +123,7 @@ function Vertex(props) {
             "shudan-animate": animate,
             "shudan-changed": changed,
 
-            [`shudan-paint_${paint > 0 ? 1 : -1}`]: !!paint,
+            [`shudan-paint_${paint! > 0 ? 1 : -1}`]: !!paint,
             "shudan-paintedleft": !!paint && signEquals(paintLeft, paint),
             "shudan-paintedright": !!paint && signEquals(paintRight, paint),
             "shudan-paintedtop": !!paint && signEquals(paintTop, paint),
@@ -95,7 +138,8 @@ function Vertex(props) {
             [`shudan-marker_${marker?.type}`]: !!marker?.type,
             "shudan-smalllabel":
               marker?.type === "label" &&
-              (marker.label?.includes("\n") || marker.label.length >= 3),
+              (marker.label?.includes("\n") ||
+                (marker.label?.length || 0) >= 3),
 
             [`shudan-ghost_${ghostStone?.sign}`]: !!ghostStone,
             [`shudan-ghost_${ghostStone?.type}`]: !!ghostStone?.type,
@@ -150,25 +194,25 @@ function Vertex(props) {
             (!!paint
               ? [paint]
               : [paintLeft, paintRight, paintTop, paintBottom].map(
-                  (x) => x !== 0 && !isNaN(x)
+                  (x) => x !== 0 && !isNaN(x!)
                 )
-            ).map((x) => Math.abs(x ?? 0) * 0.5)
+            ).map((x) => Math.abs((x ?? 0) as number) * 0.5)
           ),
           "--shudan-paint-box-shadow": [
             signEquals(paintLeft, paintTop, paintTopLeft)
-              ? [Math.sign(paintTop), "-.5em -.5em"]
+              ? [Math.sign(paintTop!), "-.5em -.5em"]
               : null,
             signEquals(paintRight, paintTop, paintTopRight)
-              ? [Math.sign(paintTop), ".5em -.5em"]
+              ? [Math.sign(paintTop!), ".5em -.5em"]
               : null,
             signEquals(paintLeft, paintBottom, paintBottomLeft)
-              ? [Math.sign(paintBottom), "-.5em .5em"]
+              ? [Math.sign(paintBottom!), "-.5em .5em"]
               : null,
             signEquals(paintRight, paintBottom, paintBottomRight)
-              ? [Math.sign(paintBottom), ".5em .5em"]
+              ? [Math.sign(paintBottom!), ".5em .5em"]
               : null,
           ]
-            .filter((x) => !!x && x[0] !== 0)
+            .filter((x): x is [number, string] => !!x && x[0] !== 0)
             .map(
               ([sign, translation]) =>
                 `${translation} 0 0 var(${
@@ -217,8 +261,9 @@ export default memo(Vertex, (prevProps, nextProps) => {
 
   // Shallow compare all other props
   for (let key in nextProps) {
-    if (key === "position") continue;
-    if (prevProps[key] !== nextProps[key]) {
+    const k = key as keyof VertexProps;
+    if (k === "position") continue;
+    if (prevProps[k] !== nextProps[k]) {
       return false; // prop changed, re-render
     }
   }

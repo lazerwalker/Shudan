@@ -1,6 +1,7 @@
-import { h, render, Component } from "react";
+import { createElement as h, Component } from "react";
+import { createRoot } from "react-dom/client";
 import Board from "@sabaki/go-board";
-import { Goban } from "../src/main.js";
+import { Goban } from "../dist/main.js";
 
 const chineseCoord = [
   "一",
@@ -354,7 +355,9 @@ class App extends Component {
 
       h(
         "div",
-        {},
+        {
+          style: { position: "relative" },
+        },
         h(Goban, {
           innerProps: {
             onContextMenu: (evt) => evt.preventDefault(),
@@ -431,4 +434,4 @@ class App extends Component {
   }
 }
 
-render(h(App), document.getElementById("root"));
+createRoot(document.getElementById("root")).render(h(App));
