@@ -1,9 +1,8 @@
-import { createElement as h, Component } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import classnames from "classnames";
 
 export { diffSignMap } from "./helper.js";
 export type Map<T> = T[][];
-
 
 import {
   random,
@@ -14,20 +13,19 @@ import {
   diffSignMap,
   range,
   getHoshis,
-  type Vertex as VertexData
+  type Vertex as VertexData,
 } from "./helper.js";
 import { CoordX, CoordY } from "./Coord.js";
 import Grid from "./Grid.js";
-import Vertex, { GhostStone, HeatVertex } from "./Vertex.js";
+import Vertex, { GhostStone, HeatVertex, VertexProps } from "./Vertex.js";
 import Line, { LineMarker } from "./Line.js";
 import { Marker } from "./Marker.js";
 
 export interface GobanProps {
   id?: string;
-  class?: string;
   className?: string;
-  style?: React.CSSProperties
-  innerProps?: React.ComponentPropsWithRef<'div'>;
+  style?: React.CSSProperties;
+  innerProps?: React.ComponentPropsWithRef<"div">;
 
   busy?: boolean;
   vertexSize?: number;
@@ -67,381 +65,391 @@ export interface GobanProps {
   animationDuration?: number;
 }
 
-interface GobanState {
-  width: number;
-  height: number;
-  rangeX: [number, number];
-  rangeY: [number, number];
-  xs: number[];
-  ys: number[];
-  hoshis: VertexData[]
-  shiftMap: number[][];
-  randomMap: number[][];
-  signMap: Map<0 | 1 | -1>;
-  animatedVertices: VertexData[];
-  changedVertices: VertexData[];
-  clearAnimatedVerticesHandler: ReturnType<typeof setTimeout> | null;
-}
+export default function Goban(props: GobanProps) {
+  const {
+    animationDuration,
+    innerProps = {},
+    vertexSize = 24,
+    coordX,
+    coordY,
+    busy,
+    signMap = [],
+    paintMap,
+    heatMap,
+    markerMap,
+    ghostStoneMap,
+    animateStonePlacement = false,
+    fuzzyStonePlacement = false,
+    showCoordinates = false,
+    coordinatesOnOutside = false,
+    lines = [],
+    selectedVertices = [],
+    dimmedVertices = [],
+    rangeX = [0, Infinity],
+    rangeY = [0, Infinity],
+  } = props;
 
-export default class Goban extends Component<GobanProps, GobanState> {
-  static getDerivedStateFromProps = function(props: GobanProps, state: GobanState) {
-  let { signMap = [], rangeX = [0, Infinity], rangeY = [0, Infinity] } = props;
+  const [shiftMap, setShiftMap] = useState<number[][]>([]);
 
-  let width = signMap.length === 0 ? 0 : signMap[0].length;
-  let height = signMap.length;
+  const [placedStones, setPlacedStones] = useState<VertexData[]>([]);
+  const [shiftingStones, setShiftingStones] = useState<VertexData[]>([]);
 
-  if (state.width === width && state.height === height) {
-    let animatedVertices = state.animatedVertices;
-    let changedVertices = state.changedVertices;
+  const prevSizeRef = useRef({ width: 0, height: 0 });
+  const prevSignMapRef = useRef<Map<0 | 1 | -1>>([]);
+  const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
-    if (
-      props.animateStonePlacement &&
-      state.clearAnimatedVerticesHandler == null
-    ) {
-      changedVertices = diffSignMap(state.signMap, signMap);
-      if (props.fuzzyStonePlacement) {
-        animatedVertices = [...changedVertices];
+  const width = signMap.length === 0 ? 0 : signMap[0].length;
+  const height = signMap.length;
+
+  const xs = useMemo(() => {
+    return range(width).slice(rangeX[0], rangeX[1] + 1);
+  }, [width, rangeX]);
+
+  const ys = useMemo(() => {
+    return range(height).slice(rangeY[0], rangeY[1] + 1);
+  }, [height, rangeY]);
+
+  const hoshis = useMemo(() => getHoshis(width, height), [width, height]);
+
+  useEffect(() => {
+    const sizeChanged =
+      prevSizeRef.current.width !== width ||
+      prevSizeRef.current.height !== height;
+
+    if (sizeChanged) {
+      // New board! Wipe everything out
+      setShiftMap(
+        readjustShifts(signMap.map((row) => row.map(() => random(8))))
+      );
+      setPlacedStones([]);
+      setShiftingStones([]);
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
       }
+
+      prevSizeRef.current = { width, height };
+      prevSignMapRef.current = signMap;
+      return;
     }
 
-    let result = {
-      signMap,
-      animatedVertices,
-      changedVertices,
-    };
+    // Same size, check for new stones
+    const changed = diffSignMap(prevSignMapRef.current, signMap);
+    prevSignMapRef.current = signMap;
 
-    if (
-      !vertexEquals(state.rangeX, rangeX) ||
-      !vertexEquals(state.rangeY, rangeY)
-    ) {
-      // Range changed
+    if (changed.length === 0) return;
 
-      Object.assign(result, {
-        rangeX,
-        rangeY,
-        xs: range(width).slice(rangeX[0], rangeX[1] + 1),
-        ys: range(height).slice(rangeY[0], rangeY[1] + 1),
+    // This behavior is different from vanilla Shudan,
+    // which only allows one animation to take place at once.
+    // Instead, we say "if there's an anim, extend the timeout and concat stones"
+    // This is not perfect — if you animate the same stone twice within a chain
+    // it won't replay the animation (because of how CSS-based animations work)
+    // but this is less bad than the previous behavior of
+    // "if there's an animation playing, ignore any new stones"
+
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+    }
+
+    if (fuzzyStonePlacement) {
+      setShiftMap((prev) => {
+        const next = prev.map((row) => [...row]);
+        for (const [x, y] of changed) {
+          next[y][x] = random(7) + 1;
+          readjustShifts(next, [x, y]);
+        }
+        return next;
       });
     }
 
-    return result;
-  }
+    if (animateStonePlacement) {
+      setPlacedStones((prev) => [...prev, ...changed]);
 
-  // Board size changed
+      if (fuzzyStonePlacement) {
+        setShiftingStones((prev) => [
+          ...prev,
+          ...changed.flatMap(neighborhood),
+        ]);
+      }
 
-  return {
+      animationTimeoutRef.current = setTimeout(() => {
+        setPlacedStones([]);
+        setShiftingStones([]);
+        animationTimeoutRef.current = null;
+      }, animationDuration ?? 200);
+    }
+  }, [
     signMap,
     width,
     height,
-    rangeX,
-    rangeY,
-    animatedVertices: [],
-    changedVertices: [],
-    clearAnimatedVerticesHandler: null,
-    xs: range(width).slice(rangeX[0], rangeX[1] + 1),
-    ys: range(height).slice(rangeY[0], rangeY[1] + 1),
-    hoshis: getHoshis(width, height),
-    shiftMap: readjustShifts(signMap.map((row) => row.map((_) => random(8)))),
-    randomMap: signMap.map((row) => row.map((_) => random(4))),
-  };
-};
+    fuzzyStonePlacement,
+    animateStonePlacement,
+    animationDuration,
+  ]);
 
-
-  constructor(props: GobanProps) {
-    super(props);
-
-    this.state = {} as GobanState
-  }
-
-  componentDidUpdate() {
-    if (
-      this.props.animateStonePlacement &&
-      !this.state.clearAnimatedVerticesHandler &&
-      this.state.changedVertices.length > 0
-    ) {
-      // Handle stone animation
-
-      if (this.state.animatedVertices.length === 0) {
-        for (let [x, y] of this.state.animatedVertices) {
-          this.state.shiftMap[y][x] = random(7) + 1;
-          readjustShifts(this.state.shiftMap, [x, y]);
-        }
-
-        this.setState({ shiftMap: this.state.shiftMap });
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
       }
-      // Clear animation classes
+    };
+  }, []);
 
-      this.setState({
-        clearAnimatedVerticesHandler: setTimeout(() => {
-          this.setState({
-            animatedVertices: [],
-            changedVertices: [],
-            clearAnimatedVerticesHandler: null,
-          });
-        }, this.props.animationDuration ?? 200),
-      });
-    }
-  }
+  const randomMap = useMemo(() => {
+    return Array(height)
+      .fill(null)
+      .map(() =>
+        Array(width)
+          .fill(null)
+          .map(() => random(4))
+      );
+  }, [width, height]);
 
-  render() {
-    let { width, height, rangeX, rangeY, xs, ys, hoshis, shiftMap, randomMap } =
-      this.state;
+  const showCoordinatesInside = showCoordinates && !coordinatesOnOutside;
+  const showCoordinatesOutside = showCoordinates && coordinatesOnOutside;
 
-    let {
-      innerProps = {},
-      vertexSize = 24,
-      coordX,
-      coordY,
-      busy,
-      signMap,
-      paintMap,
-      heatMap,
-      markerMap,
-      ghostStoneMap,
-      fuzzyStonePlacement = false,
-      showCoordinates = false,
-      coordinatesOnOutside = false,
-      lines = [],
-      selectedVertices = [],
-      dimmedVertices = [],
-    } = this.props;
+  const mainContentGrid = showCoordinatesInside
+    ? "1 / 1 / 4 / 4"
+    : showCoordinatesOutside
+    ? "2 / 2"
+    : "1 / 1";
 
-    let animatedVertices = ([] as VertexData[]).concat(
-      ...this.state.animatedVertices.map(neighborhood)
-    );
+  const vertexEventProps: Partial<VertexProps> = Object.fromEntries(
+    vertexEvents.map((e) => [`on${e}`, (props as any)[`onVertex${e}`]])
+  );
 
-    const showCoordinatesInside = showCoordinates && !coordinatesOnOutside;
-    const showCoordinatesOutside = showCoordinates && coordinatesOnOutside;
+  return (
+    <div
+      className="shudan"
+      style={{
+        display: "inline-grid",
+        gridTemplateRows: showCoordinates ? "1em auto 1em" : "auto",
+        gridTemplateColumns: showCoordinates ? "1em auto 1em" : "auto",
+        fontSize: vertexSize,
+        lineHeight: "1em",
+      }}
+    >
+      {showCoordinatesOutside && (
+        <CoordX
+          xs={xs}
+          style={{ gridRow: "1", gridColumn: "2" }}
+          coordX={coordX}
+          outside={true}
+        />
+      )}
 
-    const mainContentGrid = showCoordinatesInside
-      ? "1 / 1 / 4 / 4"
-      : showCoordinatesOutside
-      ? "2 / 2"
-      : "1 / 1";
+      {showCoordinatesOutside && (
+        <CoordY
+          height={height}
+          ys={ys}
+          style={{ gridRow: "2", gridColumn: "1" }}
+          coordY={coordY}
+          outside={true}
+        />
+      )}
 
-    return h(
-      "div",
-      {
-        className: "shudan",
-        style: {
-          display: "inline-grid",
-          gridTemplateRows: showCoordinates ? "1em 1fr 1em" : "1fr",
-          gridTemplateColumns: showCoordinates ? "1em 1fr 1em" : "1fr",
-          fontSize: vertexSize,
-          lineHeight: "1em",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        },
-      },
-
-      showCoordinatesOutside &&
-        h(CoordX, {
-          xs,
-          style: { gridRow: "1", gridColumn: "2" },
-          coordX,
-          outside: true,
-        }),
-
-      showCoordinatesOutside &&
-        h(CoordY, {
-          height,
-          ys,
-          style: { gridRow: "2", gridColumn: "1" },
-          coordY,
-          outside: true,
-        }),
-      h(
-        "div",
-        {
-          ...innerProps,
-          id: this.props.id,
-          className: classnames(
-            "shudan-goban",
-            "shudan-goban-image",
-            {
-              "shudan-busy": busy,
-              "shudan-coordinates": showCoordinatesInside,
-            },
-            this.props.class ?? this.props.className
-          ),
-          style: {
-            ...(this.props.style ?? {}),
-            display: "inline-grid",
-            gridArea: mainContentGrid,
-          },
-        },
-
-        showCoordinatesInside &&
-          h(CoordX, { xs, style: { gridRow: "1", gridColumn: "2" }, coordX }),
-
-        showCoordinatesInside &&
-          h(CoordY, {
-            height,
-            ys,
-            style: { gridRow: "2", gridColumn: "1" },
-            coordY,
-          }),
-
-        h(
-          "div",
+      <div
+        {...innerProps}
+        id={props.id}
+        className={classnames(
+          "shudan-goban",
+          "shudan-goban-image",
           {
-            className: "shudan-content",
-            style: {
-              position: "relative",
-              width: `${xs.length}em`,
-              height: `${ys.length}em`,
-              gridRow: showCoordinates ? "2" : "1",
-              gridColumn: showCoordinates ? "2" : "1",
-            },
+            "shudan-busy": busy,
+            "shudan-coordinates": showCoordinatesInside,
           },
-
-          h(Grid, {
-            vertexSize,
-            width,
-            height,
-            xs,
-            ys,
-            hoshis,
+          props.className
+        )}
+        style={{
+          ...(props.style ?? {}),
+          display: "inline-grid",
+          gridArea: mainContentGrid,
+          ...(showCoordinatesInside && {
+            gridTemplateRows: "1em auto 1em",
+            gridTemplateColumns: "1em auto 1em",
           }),
+        }}
+      >
+        {showCoordinatesInside && (
+          <CoordX
+            xs={xs}
+            style={{ gridRow: "1", gridColumn: "2" }}
+            coordX={coordX}
+          />
+        )}
 
-          h(
-            "div",
-            {
-              className: "shudan-vertices",
-              style: {
-                display: "grid",
-                gridTemplateColumns: `repeat(${xs.length}, 1em)`,
-                gridTemplateRows: `repeat(${ys.length}, 1em)`,
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 1,
-              },
-            },
+        {showCoordinatesInside && (
+          <CoordY
+            height={height}
+            ys={ys}
+            style={{ gridRow: "2", gridColumn: "1" }}
+            coordY={coordY}
+          />
+        )}
 
-            ys.map((y) =>
-              xs.map((x) => {
+        <div
+          className="shudan-content"
+          style={{
+            position: "relative",
+            width: `${xs.length}em`,
+            height: `${ys.length}em`,
+            gridRow: showCoordinates ? "2" : "1",
+            gridColumn: showCoordinates ? "2" : "1",
+          }}
+        >
+          <Grid
+            vertexSize={vertexSize}
+            width={width}
+            height={height}
+            xs={xs}
+            ys={ys}
+            hoshis={hoshis}
+          />
+
+          <div
+            className="shudan-vertices"
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${xs.length}, 1em)`,
+              gridTemplateRows: `repeat(${ys.length}, 1em)`,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1,
+            }}
+          >
+            {ys.map((y) => {
+              return xs.map((x) => {
                 let equalsVertex = (v: VertexData) => vertexEquals(v, [x, y]);
                 let selected = selectedVertices.some(equalsVertex);
 
-                return h(
-                  Vertex,
-                  Object.assign(
-                    {
-                      key: [x, y].join("-"),
-                      position: [x, y],
+                return (
+                  <Vertex
+                    key={[x, y].join("-")}
+                      position={[x, y]}
 
-                      shift: fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0,
-                      random: randomMap?.[y]?.[x],
-                      sign: signMap?.[y]?.[x],
+                        shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
+                        random={randomMap?.[y]?.[x]}
+                        sign={signMap?.[y]?.[x]}
 
-                      heat: heatMap?.[y]?.[x],
-                      marker: markerMap?.[y]?.[x],
-                      ghostStone: ghostStoneMap?.[y]?.[x],
-                      dimmed: dimmedVertices.some(equalsVertex),
-                      animate: animatedVertices.some(equalsVertex),
-                      changed: this.state.changedVertices.some(equalsVertex),
+                        heat={heatMap?.[y]?.[x]}
+                        marker={markerMap?.[y]?.[x]}
+                        ghostStone={ghostStoneMap?.[y]?.[x]}
+                        dimmed={dimmedVertices.some(equalsVertex)}
+                        // TODO: Rename both of these to be clearer about the distinction
+                        animate={shiftingStones.some(equalsVertex)}
+                        changed={placedStones.some(equalsVertex)}
 
-                      paint: paintMap?.[y]?.[x],
-                      paintLeft: paintMap?.[y]?.[x - 1],
-                      paintRight: paintMap?.[y]?.[x + 1],
-                      paintTop: paintMap?.[y - 1]?.[x],
-                      paintBottom: paintMap?.[y + 1]?.[x],
-                      paintTopLeft: paintMap?.[y - 1]?.[x - 1],
-                      paintTopRight: paintMap?.[y - 1]?.[x + 1],
-                      paintBottomLeft: paintMap?.[y + 1]?.[x - 1],
-                      paintBottomRight: paintMap?.[y + 1]?.[x + 1],
+                        paint={paintMap?.[y]?.[x]}
+                        paintLeft={paintMap?.[y]?.[x - 1]}
+                        paintRight={paintMap?.[y]?.[x + 1]}
+                        paintTop={paintMap?.[y - 1]?.[x]}
+                        paintBottom={paintMap?.[y + 1]?.[x]}
+                        paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
+                        paintTopRight={paintMap?.[y - 1]?.[x + 1]}
+                        paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
+                        paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
 
-                      selected,
-                      selectedLeft:
-                        selected &&
-                        selectedVertices.some((v) =>
-                          vertexEquals(v, [x - 1, y])
-                        ),
-                      selectedRight:
-                        selected &&
-                        selectedVertices.some((v) =>
-                          vertexEquals(v, [x + 1, y])
-                        ),
-                      selectedTop:
-                        selected &&
-                        selectedVertices.some((v) =>
-                          vertexEquals(v, [x, y - 1])
-                        ),
-                      selectedBottom:
-                        selected &&
-                        selectedVertices.some((v) =>
-                          vertexEquals(v, [x, y + 1])
-                        ),
-                    },
-
-                    ...vertexEvents.map((e) => ({
-                      [`on${e}`]: (this.props as any)[`onVertex${e}`],
-                    }))
-                  )
+                        selected={selected}
+                        selectedLeft={
+                          selected &&
+                          selectedVertices.some((v) =>
+                            vertexEquals(v, [x - 1, y])
+                          )
+                        }                          
+                        selectedRight={
+                          selected &&
+                          selectedVertices.some((v) =>
+                            vertexEquals(v, [x + 1, y])
+                          )
+                        }
+                        selectedTop={
+                          selected &&
+                          selectedVertices.some((v) =>
+                            vertexEquals(v, [x, y - 1])
+                          )
+                        }
+                        selectedBottom={
+                          selected &&
+                          selectedVertices.some((v) =>
+                            vertexEquals(v, [x, y + 1])
+                          )
+                        }
+                      {...vertexEventProps}
+                  />
                 );
-              })
-            )
-          ),
-
-          h(
-            "svg",
-            {
-              className: "shudan-lines",
-              style: {
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                pointerEvents: "none",
-                zIndex: 2,
-              },
-            },
-
-            h(
-              "g",
-              {
-                transform: `translate(-${rangeX[0] * vertexSize} -${
-                  rangeY[0] * vertexSize
-                })`,
-              },
-
-              lines.map(({ v1, v2, type }, i) =>
-                h(Line, { key: i, v1, v2, type, vertexSize })
-              )
-            )
-          )
-        ),
-        showCoordinatesInside &&
-          h(CoordY, {
-            height,
-            ys,
-            style: { gridRow: "2", gridColumn: "3" },
-            coordY,
-          }),
-        showCoordinatesInside &&
-          h(CoordX, {
-            xs,
-            style: { gridRow: "3", gridColumn: "2" },
-            coordX,
-          })
-      ),
-      showCoordinatesOutside &&
-        h(CoordY, {
-          height,
-          ys,
-          style: { gridRow: "2", gridColumn: "3" },
-          coordY,
-          outside: true,
-        }),
-      showCoordinatesOutside &&
-        h(CoordX, { xs, style: { gridRow: "3", gridColumn: "2" }, coordX, outside: true })
-    );
-  }
+              });
+            })}
+          </div>
+          <svg
+            className="shudan-lines"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              zIndex: 2,
+            }}
+          >
+            <g
+              transform={`translate(-${rangeX[0] * vertexSize} -${
+                rangeY[0] * vertexSize
+              })`}
+            >
+              {lines.map(({ v1, v2, type }, i) => (
+                <Line
+                  key={i}
+                  v1={v1}
+                  v2={v2}
+                  type={type}
+                  vertexSize={vertexSize}
+                />
+              ))}
+            </g>
+          </svg>
+        </div>
+        {showCoordinatesInside && (
+          <CoordY
+            height={height}
+            ys={ys}
+            style={{
+              gridRow: "2",
+              gridColumn: "3",
+            }}
+            coordY={coordY}
+          />
+        )}
+        {showCoordinatesInside && (
+          <CoordX
+            xs={xs}
+            style={{ gridRow: "3", gridColumn: "2" }}
+            coordX={coordX}
+          />
+        )}
+      </div>
+      {showCoordinatesOutside && (
+        <CoordY
+          height={height}
+          ys={ys}
+          style={{ gridRow: "2", gridColumn: "3" }}
+          coordY={coordY}
+          outside={true}
+        />
+      )}
+      {showCoordinatesOutside && (
+        <CoordX
+          xs={xs}
+          style={{ gridRow: "3", gridColumn: "2" }}
+          coordX={coordX}
+          outside={true}
+        />
+      )}
+    </div>
+  );
 }

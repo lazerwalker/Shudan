@@ -15,12 +15,12 @@ export interface HeatVertex {
   text?: string | null;
 }
 
-type VertexProps = {
+export type VertexProps = {
   position: [number, number];
-  shift?: "left" | "right" | "up" | "down";
+  shift?: number;
   random?: number;
   sign: Sign;
-  heat?: HeatVertex;
+  heat?: HeatVertex | null;
 
   paint?: number;
   paintLeft?: number;
@@ -33,8 +33,8 @@ type VertexProps = {
   paintBottomRight?: number;
 
   dimmed?: boolean;
-  marker?: MarkerData;
-  ghostStone?: GhostStone;
+  marker?: MarkerData | null;
+  ghostStone?: GhostStone | null;
 
   animate?: boolean;
   changed?: boolean;

@@ -6,7 +6,6 @@ export enum Sign {
   White = -1,
 }
 
-
 export const alpha = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
 export const vertexEvents = [
   "Click",
