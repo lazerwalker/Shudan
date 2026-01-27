@@ -202,6 +202,7 @@ class App extends Component {
       board: new Board(signMap),
       vertexSize: 24,
       showCoordinates: false,
+      coordinatesOnOutside: false,
       alternateCoordinates: false,
       showCorner: false,
       showDimmedStones: false,
@@ -223,6 +224,7 @@ class App extends Component {
     let {
       vertexSize,
       showCoordinates,
+      coordinatesOnOutside,
       alternateCoordinates,
       showCorner,
       showDimmedStones,
@@ -322,6 +324,10 @@ class App extends Component {
           text: "Show coordinates",
         }),
         h(this.CheckBox, {
+          stateKey: "coordinatesOnOutside",
+          text: "Coordinates on outside"
+        }),
+        h(this.CheckBox, {
           stateKey: "alternateCoordinates",
           text: "Alternate coordinates",
         }),
@@ -373,6 +379,7 @@ class App extends Component {
 
           signMap: this.state.board.signMap,
           showCoordinates,
+          coordinatesOnOutside,
           fuzzyStonePlacement,
           animateStonePlacement,
           paintMap: showPaintMap && paintMap,
