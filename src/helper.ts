@@ -7,19 +7,6 @@ export enum Sign {
 }
 
 export const alpha = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
-export const vertexEvents = [
-  "Click",
-  "MouseDown",
-  "MouseUp",
-  "MouseMove",
-  "MouseEnter",
-  "MouseLeave",
-  "PointerDown",
-  "PointerUp",
-  "PointerMove",
-  "PointerEnter",
-  "PointerLeave",
-];
 
 export const avg = (xs: number[]): number =>
   xs.length === 0 ? 0 : xs.reduce((sum, x) => sum + x, 0) / xs.length;
@@ -127,6 +114,29 @@ export function readjustShifts(
   }
 
   return shiftMap;
+}
+
+export function vertexFromPoint(
+  clientX: number,
+  clientY: number,
+  contentRect: DOMRect,
+  vertexSize: number,
+  xs: number[],
+  ys: number[]
+): Vertex | null {
+  const relativeX = clientX - contentRect.left;
+  const relativeY = clientY - contentRect.top;
+
+  if (relativeX < 0 || relativeY < 0) return null;
+
+  const gridX = Math.floor(relativeX / vertexSize);
+  const gridY = Math.floor(relativeY / vertexSize);
+
+  if (gridX < 0 || gridX >= xs.length || gridY < 0 || gridY >= ys.length) {
+    return null;
+  }
+
+  return [xs[gridX], ys[gridY]];
 }
 
 export function diffSignMap(before: number[][], after: number[][]): Vertex[] {

@@ -301,22 +301,21 @@ All props are optional. The following props are supported:
 #### Event Props
 
 - `onVertexClick` `<Function>`
-- `onVertexMouseUp` `<Function>`
-- `onVertexMouseDown` `<Function>`
-- `onVertexMouseMove` `<Function>`
-- `onVertexMouseEnter` `<Function>`
-- `onVertexMouseLeave` `<Function>`
-- `onVertexPointerUp` `<Function>`
-- `onVertexPointerDown` `<Function>`
-- `onVertexPointerMove` `<Function>`
-- `onVertexPointerEnter` `<Function>`
-- `onVertexPointerLeave` `<Function>`
+- `onVertexHover` `<Function>`
+- `onVertexDrag` `<Function>`
+- `onVertexRightClick` `<Function>`
+- `onVertexLongPress` `<Function>`
 
-These functions will be called when the corresponding event is emitted on a
-vertex. It will be called with two arguments:
+These functions will be called when the user interacts with a vertex. Under the hood this uses `pointer` events, so it will work with both touch and mouse input (and includes specific handling for the Apple Pencil, which tends to aggressively send `touchcancel`/`pointercancel` events instead of `touchend`/`pointerup`). On mobile, you will not get `onVertexHover` events, unless you are using a device that supports hover input (e.g. Apple Pencil on some devices). When moving the cursor from inside to outside the goban, you will get a drag or hover callback with the vertex set to `null`.
 
-1. `evt` - The original event
-2. `vertex` [`<Vertex>`](#vertex-representation)
+Your handlers will be called with two arguments:
+
+1. `vertex` [`<Vertex>`](#vertex-representation)
+2. `evt` - The original event
+
+By default a long-press will be triggered after 500ms when using an input method that is not `mouse` (e.g. `touch` or `pen`). The `longPressThreshold` prop lets you configure this, with a numeric threshold in milliseconds.
+
+- `longPressThreshold` `<number>`
 
 ### `BoundedGoban` Component
 

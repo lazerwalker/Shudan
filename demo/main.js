@@ -356,7 +356,8 @@ class App extends Component {
         h(this.CheckBox, { stateKey: "showHeatMap", text: "Show heat map" }),
         h(this.CheckBox, { stateKey: "showLines", text: "Show lines" }),
         h(this.CheckBox, { stateKey: "showSelection", text: "Show selection" }),
-        h(this.CheckBox, { stateKey: "isBusy", text: "Busy" })
+        h(this.CheckBox, { stateKey: "isBusy", text: "Busy" }),
+        h("div", {style: { paddingTop: "1em" }}, "Left-click or touch to place black stones, right-click or long-press to place white stones.")
       ),
 
       h(
@@ -420,10 +421,18 @@ class App extends Component {
               ]
             : [],
 
-          onVertexMouseUp: (evt, [x, y]) => {
-            let sign = evt.button === 0 ? 1 : -1;
-            let newBoard = this.state.board.makeMove(sign, [x, y]);
+          onVertexClick: ([x, y]) => {
+            let newBoard = this.state.board.makeMove(1, [x, y]);
+            this.setState({ board: newBoard });
+          },
 
+          onVertexRightClick: ([x, y]) => {
+            let newBoard = this.state.board.makeMove(-1, [x, y]);
+            this.setState({ board: newBoard });
+          },
+
+          onVertexLongPress: ([x, y]) => {
+            let newBoard = this.state.board.makeMove(-1, [x, y]);
             this.setState({ board: newBoard });
           },
         }),

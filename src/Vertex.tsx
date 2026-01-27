@@ -1,7 +1,7 @@
-import { createElement as h, useCallback, memo, CSSProperties } from "react";
+import { createElement as h, memo, CSSProperties } from "react";
 import classnames from "classnames";
 
-import { avg, vertexEvents, signEquals, Sign } from "./helper.js";
+import { avg, signEquals, Sign } from "./helper.js";
 import Marker, { type Marker as MarkerData } from "./Marker.js";
 
 export interface GhostStone {
@@ -79,18 +79,6 @@ function Vertex(props: VertexProps) {
     selectedBottom,
   } = props;
 
-  let eventHandlers: { [key: string]: (evt: any) => void } = {};
-
-  // TODO: Unsure this is actually doing what we want it to (and breaks hooks rule if ordering changes?)
-  for (let eventName of vertexEvents) {
-    eventHandlers[eventName] = useCallback(
-      (evt) => {
-        (props as any)[`on${eventName}`]?.(evt, position);
-      },
-      [...position, (props as any)[`on${eventName}`]]
-    );
-  }
-
   let markerMarkup = (zIndex?: number) =>
     !!marker &&
     h(Marker, {
@@ -103,54 +91,49 @@ function Vertex(props: VertexProps) {
 
   return h(
     "div",
-    Object.assign(
-      {
-        "data-x": position[0],
-        "data-y": position[1],
+    {
+      "data-x": position[0],
+      "data-y": position[1],
 
-        title: marker?.label,
-        style: {
-          position: "relative",
-        },
-        className: classnames(
-          "shudan-vertex",
-          `shudan-random_${random}`,
-          `shudan-sign_${sign}`,
-          {
-            [`shudan-shift_${shift}`]: !!shift,
-            [`shudan-heat_${!!heat && heat.strength}`]: !!heat,
-            "shudan-dimmed": dimmed,
-            "shudan-animate": animate,
-            "shudan-changed": changed,
-
-            [`shudan-paint_${paint! > 0 ? 1 : -1}`]: !!paint,
-            "shudan-paintedleft": !!paint && signEquals(paintLeft, paint),
-            "shudan-paintedright": !!paint && signEquals(paintRight, paint),
-            "shudan-paintedtop": !!paint && signEquals(paintTop, paint),
-            "shudan-paintedbottom": !!paint && signEquals(paintBottom, paint),
-
-            "shudan-selected": selected,
-            "shudan-selectedleft": selectedLeft,
-            "shudan-selectedright": selectedRight,
-            "shudan-selectedtop": selectedTop,
-            "shudan-selectedbottom": selectedBottom,
-
-            [`shudan-marker_${marker?.type}`]: !!marker?.type,
-            "shudan-smalllabel":
-              marker?.type === "label" &&
-              (marker.label?.includes("\n") ||
-                (marker.label?.length || 0) >= 3),
-
-            [`shudan-ghost_${ghostStone?.sign}`]: !!ghostStone,
-            [`shudan-ghost_${ghostStone?.type}`]: !!ghostStone?.type,
-            "shudan-ghost_faint": !!ghostStone?.faint,
-          }
-        ),
+      title: marker?.label,
+      style: {
+        position: "relative",
       },
-      ...vertexEvents.map((eventName) => ({
-        [`on${eventName}`]: eventHandlers[eventName],
-      }))
-    ),
+      className: classnames(
+        "shudan-vertex",
+        `shudan-random_${random}`,
+        `shudan-sign_${sign}`,
+        {
+          [`shudan-shift_${shift}`]: !!shift,
+          [`shudan-heat_${!!heat && heat.strength}`]: !!heat,
+          "shudan-dimmed": dimmed,
+          "shudan-animate": animate,
+          "shudan-changed": changed,
+
+          [`shudan-paint_${paint! > 0 ? 1 : -1}`]: !!paint,
+          "shudan-paintedleft": !!paint && signEquals(paintLeft, paint),
+          "shudan-paintedright": !!paint && signEquals(paintRight, paint),
+          "shudan-paintedtop": !!paint && signEquals(paintTop, paint),
+          "shudan-paintedbottom": !!paint && signEquals(paintBottom, paint),
+
+          "shudan-selected": selected,
+          "shudan-selectedleft": selectedLeft,
+          "shudan-selectedright": selectedRight,
+          "shudan-selectedtop": selectedTop,
+          "shudan-selectedbottom": selectedBottom,
+
+          [`shudan-marker_${marker?.type}`]: !!marker?.type,
+          "shudan-smalllabel":
+            marker?.type === "label" &&
+            (marker.label?.includes("\n") ||
+              (marker.label?.length || 0) >= 3),
+
+          [`shudan-ghost_${ghostStone?.sign}`]: !!ghostStone,
+          [`shudan-ghost_${ghostStone?.type}`]: !!ghostStone?.type,
+          "shudan-ghost_faint": !!ghostStone?.faint,
+        }
+      ),
+    },
 
     !sign && markerMarkup(0),
     !sign &&
