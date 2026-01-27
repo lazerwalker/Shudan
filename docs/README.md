@@ -4,25 +4,21 @@
 
 ### About Shudan
 
-The Shudan Goban is the Goban component that powers
-[Sabaki](https://sabaki.yichuanshen.de). It is licensed under the MIT license
-and supports modern browsers. Shudan is written for
-[Preact](https://preactjs.com/), but should work with
-[React](https://reactjs.org) as well.
+Shindan is the Goban component that powers the upcoming app [Tenuki](https://forums.online-go.com/t/tenuki-a-new-ios-ogs-client/58792/59). It is based on [Shudan](https://github.com/SabakiHQ/shudan), which powers [Sabaki](https://sabaki.yichuanshen.de). It is licensed under the MIT license
+and supports modern browsers. 
+
+Shudan is written for [React](https://reactjs.org), and is written in TypeScript, although applications written in vanilla JS should be able to use it just fine.
 
 ### Installation
 
-Use npm to install:
+You can install shindan from npm. 
 
-```
-$ npm install @sabaki/shudan
-```
+```npm install shindan```
 
 To use this module, require it as follows:
 
-```js
-const { h } = require("preact");
-const { Goban } = require("@sabaki/shudan");
+```ts
+import { Goban } from 'shindan'
 
 const CustomComponent = (props) => (
   <Goban vertexSize={24} signMap={props.signMap} />
@@ -33,25 +29,6 @@ Don't forget to include the `css/goban.css` file in your HTML:
 
 ```html
 <link rel="stylesheet" href="path/to/css/goban.css" />
-```
-
-In this case, we assume you have a bundler set up correctly and Preact
-installed.
-
-### Using with React
-
-Shudan is fully compatible with React. In your webpack configuration,
-additionally alias `preact` to `react`:
-
-```js
-module.exports = {
-  // ...
-  resolve: {
-    alias: {
-      preact: "react",
-    },
-  },
-};
 ```
 
 ### Board Representation
@@ -199,6 +176,10 @@ All props are optional. The following props are supported:
 - `showCoordinates` `<boolean>` - Default: `false`
 
   Determines rendering of coordinates.
+
+- `showCoordinatesOnOutsidd` `<boolean>` - Default: `false`
+
+  If true, coordinates are rendered outside the board rather than inside.
 
 - `coordX` `<Function>` - Default: `x => ['A', 'B', 'C', ...][x]`
 

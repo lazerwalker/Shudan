@@ -1,6 +1,6 @@
 {
-  "name": "@sabaki/shudan",
-  "version": "1.7.1",
+  "name": "shindan",
+  "version": "0.0.1",
   "description": "A highly customizable, low-level React Goban component.",
   "type": "module",
   "main": "./dist/main.js",
@@ -18,7 +18,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SabakiHQ/Shudan.git"
+    "url": "git+https://github.com/lazerwalker/Shindan.git"
   },
   "keywords": [
     "go",
@@ -33,9 +33,9 @@
   "author": "Yichuan Shen",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/SabakiHQ/Shudan/issues"
+    "url": "https://github.com/lazerwalker/Shindan/issues"
   },
-  "homepage": "https://github.com/SabakiHQ/Shudan",
+  "homepage": "https://github.com/lazerwalker/Shindan",
   "dependencies": {
     "classnames": "^2.3.1"
   },

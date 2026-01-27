@@ -6,8 +6,7 @@ is TypeScript-native instead of JS with a hand-written type definition file, and
 is in the process of being extended to support an optional canvas renderer for
 performance reasons.
 
-The rest of this doc is still written for Shudan, but should be more or less the
-same.
+At this moment in time, it is a feature-equivalent fork of Shudan with only internal refactors, except for the addition of the `coordinatesOnOutside` prop.
 
 (Why the name? Shudan (手談) means "hand talk", an evocative euphemistic name
 for the game of Go. "Shin" (新) can mean "new", reflecting that this is a newer
@@ -39,7 +38,7 @@ Make sure you have Node.js v8 and npm installed. First, clone this repository
 via Git, then install all dependencies with npm:
 
 ```
-$ git clone https://github.com/SabakiHQ/Shudan
+$ git clone https://github.com/lazerwalker/shindan
 $ cd Shudan
 $ npm install
 ```
@@ -56,5 +55,4 @@ You can use the `watch-demo` command for development:
 $ npm run watch-demo
 ```
 
-Open `demo/index.html` in your browser to run demo. Alternatively, use
-`build-demo-react` and `watch-demo-react` to build the React-based demo.
+Open `demo/index.html` in your browser to run demo. A
