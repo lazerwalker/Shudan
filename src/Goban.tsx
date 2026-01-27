@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 
 export { diffSignMap, vertexFromPoint } from "./helper.js";
 
@@ -18,6 +18,11 @@ import { Marker } from "./Marker.js";
 import { useGobanPointerEvents } from "./useGobanPointerEvents.js";
 import GobanShell from "./GobanShell.js";
 import DOMRenderer from "./DOMRenderer.js";
+
+function useForceUpdate() {
+  const [, setState] = useState(0);
+  return useCallback(() => setState((n) => n + 1), []);
+}
 
 export interface GobanProps {
   id?: string;
@@ -88,10 +93,16 @@ export default function Goban(props: GobanProps) {
     longPressThreshold = 500,
   } = props;
 
-  const [shiftMap, setShiftMap] = useState<number[][]>([]);
+  // Used by the animation callback to force a re-render
+  const forceUpdate = useForceUpdate();
 
-  const [placedStones, setPlacedStones] = useState<VertexData[]>([]);
-  const [shiftingStones, setShiftingStones] = useState<VertexData[]>([]);
+  // refs instead of state so they can be updatedsynchronously during render
+  // Shudan uses getDerivedStateFromProps for this purpose.
+  // Without this, there is a frame of lag before stones render,
+  // which looks particularly bad with Tenuki's stone-placement animation
+  const shiftMapRef = useRef<number[][]>([]);
+  const placedStonesRef = useRef<VertexData[]>([]);
+  const shiftingStonesRef = useRef<VertexData[]>([]);
 
   const prevSizeRef = useRef({ width: 0, height: 0 });
   const prevSignMapRef = useRef<Map<0 | 1 | -1>>([]);
@@ -103,6 +114,77 @@ export default function Goban(props: GobanProps) {
 
   const width = signMap.length === 0 ? 0 : signMap[0].length;
   const height = signMap.length;
+
+  // Compute animation state synchronously during render (like getDerivedStateFromProps)
+  // This mimics Shudan, and avoids flickering when placing a stone
+  const sizeChanged =
+    prevSizeRef.current.width !== width ||
+    prevSizeRef.current.height !== height;
+
+  if (sizeChanged) {
+    // New board! Wipe everything out
+    shiftMapRef.current = readjustShifts(
+      signMap.map((row) => row.map(() => random(8)))
+    );
+    placedStonesRef.current = [];
+    shiftingStonesRef.current = [];
+    if (animationTimeoutRef.current) {
+      clearTimeout(animationTimeoutRef.current);
+      animationTimeoutRef.current = null;
+    }
+    prevSizeRef.current = { width, height };
+    prevSignMapRef.current = signMap;
+  } else if (prevSignMapRef.current !== signMap) {
+    // Same size, check for new stones
+    const changed = diffSignMap(prevSignMapRef.current, signMap);
+    prevSignMapRef.current = signMap;
+
+    if (changed.length > 0) {
+      // Clear any existing timeout and extend animation
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+        animationTimeoutRef.current = null;
+      }
+
+      if (fuzzyStonePlacement) {
+        const nextShiftMap = shiftMapRef.current.map((row) => [...row]);
+        for (const [x, y] of changed) {
+          nextShiftMap[y][x] = random(7) + 1;
+          readjustShifts(nextShiftMap, [x, y]);
+        }
+        shiftMapRef.current = nextShiftMap;
+      }
+
+      if (animateStonePlacement) {
+        placedStonesRef.current = [...placedStonesRef.current, ...changed];
+
+        if (fuzzyStonePlacement) {
+          shiftingStonesRef.current = [
+            ...shiftingStonesRef.current,
+            ...changed.flatMap(neighborhood),
+          ];
+        }
+
+        // In theory, this should be in a useEffect block because it's a side effect
+        // In practice, it's probably fine, and this flow is more logical
+        animationTimeoutRef.current = setTimeout(() => {
+          placedStonesRef.current = [];
+          shiftingStonesRef.current = [];
+          animationTimeoutRef.current = null;
+          forceUpdate();
+        }, animationDuration ?? 200);
+      }
+    }
+  }
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const xs = useMemo(() => {
     return range(width).slice(rangeX[0], rangeX[1] + 1);
@@ -127,90 +209,6 @@ export default function Goban(props: GobanProps) {
     longPressThreshold,
   });
 
-  useEffect(() => {
-    const sizeChanged =
-      prevSizeRef.current.width !== width ||
-      prevSizeRef.current.height !== height;
-
-    if (sizeChanged) {
-      // New board! Wipe everything out
-      setShiftMap(
-        readjustShifts(signMap.map((row) => row.map(() => random(8))))
-      );
-      setPlacedStones([]);
-      setShiftingStones([]);
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-        animationTimeoutRef.current = null;
-      }
-
-      prevSizeRef.current = { width, height };
-      prevSignMapRef.current = signMap;
-      return;
-    }
-
-    // Same size, check for new stones
-    const changed = diffSignMap(prevSignMapRef.current, signMap);
-    prevSignMapRef.current = signMap;
-
-    if (changed.length === 0) return;
-
-    // This behavior is different from vanilla Shudan,
-    // which only allows one animation to take place at once.
-    // Instead, we say "if there's an anim, extend the timeout and concat stones"
-    // This is not perfect — if you animate the same stone twice within a chain
-    // it won't replay the animation (because of how CSS-based animations work)
-    // but this is less bad than the previous behavior of
-    // "if there's an animation playing, ignore any new stones"
-
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
-    }
-
-    if (fuzzyStonePlacement) {
-      setShiftMap((prev) => {
-        const next = prev.map((row) => [...row]);
-        for (const [x, y] of changed) {
-          next[y][x] = random(7) + 1;
-          readjustShifts(next, [x, y]);
-        }
-        return next;
-      });
-    }
-
-    if (animateStonePlacement) {
-      setPlacedStones((prev) => [...prev, ...changed]);
-
-      if (fuzzyStonePlacement) {
-        setShiftingStones((prev) => [
-          ...prev,
-          ...changed.flatMap(neighborhood),
-        ]);
-      }
-
-      animationTimeoutRef.current = setTimeout(() => {
-        setPlacedStones([]);
-        setShiftingStones([]);
-        animationTimeoutRef.current = null;
-      }, animationDuration ?? 200);
-    }
-  }, [
-    signMap,
-    width,
-    height,
-    fuzzyStonePlacement,
-    animateStonePlacement,
-    animationDuration,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const randomMap = useMemo(() => {
     return Array(height)
       .fill(null)
@@ -233,6 +231,8 @@ export default function Goban(props: GobanProps) {
       coordinatesOnOutside={coordinatesOnOutside}
       busy={busy}
       id={props.id}
+      className={props.className}
+      style={props.style}
       innerProps={innerProps}
       contentProps={pointerEventHandlers}
       contentRef={contentRef}
@@ -245,13 +245,12 @@ export default function Goban(props: GobanProps) {
         vertexSize={vertexSize}
         signMap={signMap}
         hoshis={hoshis}
-        shiftingStones={shiftingStones}
-        placedStones={placedStones}
+        shiftingStones={shiftingStonesRef.current}
+        placedStones={placedStonesRef.current}
         rangeX={rangeX}
         rangeY={rangeY}
-        shiftMap={shiftMap}
+        shiftMap={shiftMapRef.current}
         randomMap={randomMap}
-
         selectedVertices={selectedVertices}
         dimmedVertices={dimmedVertices}
         fuzzyStonePlacement={fuzzyStonePlacement}
