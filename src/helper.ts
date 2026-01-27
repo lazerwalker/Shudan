@@ -1,4 +1,5 @@
 export type Vertex = [x: number, y: number];
+export type Map<T> = T[][];
 
 export enum Sign {
   Empty = 0,

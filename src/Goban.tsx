@@ -1,25 +1,23 @@
 import { useMemo, useState, useRef, useEffect } from "react";
-import classnames from "classnames";
 
 export { diffSignMap, vertexFromPoint } from "./helper.js";
-export type Map<T> = T[][];
 
 import {
   random,
   readjustShifts,
   neighborhood,
-  vertexEquals,
   diffSignMap,
   range,
   getHoshis,
+  type Map,
   type Vertex as VertexData,
 } from "./helper.js";
-import { CoordX, CoordY } from "./Coord.js";
-import Grid from "./Grid.js";
-import Vertex, { GhostStone, HeatVertex } from "./Vertex.js";
-import Line, { LineMarker } from "./Line.js";
+import { GhostStone, HeatVertex } from "./Vertex.js";
+import { LineMarker } from "./Line.js";
 import { Marker } from "./Marker.js";
 import { useGobanPointerEvents } from "./useGobanPointerEvents.js";
+import GobanShell from "./GobanShell.js";
+import DOMRenderer from "./DOMRenderer.js";
 
 export interface GobanProps {
   id?: string;
@@ -223,234 +221,46 @@ export default function Goban(props: GobanProps) {
       );
   }, [width, height]);
 
-  const showCoordinatesInside = showCoordinates && !coordinatesOnOutside;
-  const showCoordinatesOutside = showCoordinates && coordinatesOnOutside;
-
-  const mainContentGrid = showCoordinatesInside
-    ? "1 / 1 / 4 / 4"
-    : showCoordinatesOutside
-    ? "2 / 2"
-    : "1 / 1";
-
   return (
-    <div
-      className="shudan"
-      style={{
-        display: "inline-grid",
-        gridTemplateRows: showCoordinates ? "1em auto 1em" : "auto",
-        gridTemplateColumns: showCoordinates ? "1em auto 1em" : "auto",
-        fontSize: vertexSize,
-        lineHeight: "1em",
-      }}
+    <GobanShell
+      vertexSize={vertexSize}
+      xs={xs}
+      ys={ys}
+      height={height}
+      coordX={coordX}
+      coordY={coordY}
+      showCoordinates={showCoordinates}
+      coordinatesOnOutside={coordinatesOnOutside}
+      busy={busy}
+      id={props.id}
+      innerProps={innerProps}
+      contentProps={pointerEventHandlers}
+      contentRef={contentRef}
     >
-      {showCoordinatesOutside && (
-        <CoordX
-          xs={xs}
-          style={{ gridRow: "1", gridColumn: "2" }}
-          coordX={coordX}
-          outside={true}
-        />
-      )}
+      <DOMRenderer
+        width={width}
+        height={height}
+        xs={xs}
+        ys={ys}
+        vertexSize={vertexSize}
+        signMap={signMap}
+        hoshis={hoshis}
+        shiftingStones={shiftingStones}
+        placedStones={placedStones}
+        rangeX={rangeX}
+        rangeY={rangeY}
+        shiftMap={shiftMap}
+        randomMap={randomMap}
 
-      {showCoordinatesOutside && (
-        <CoordY
-          height={height}
-          ys={ys}
-          style={{ gridRow: "2", gridColumn: "1" }}
-          coordY={coordY}
-          outside={true}
-        />
-      )}
-
-      <div
-        {...innerProps}
-        id={props.id}
-        className={classnames(
-          "shudan-goban",
-          "shudan-goban-image",
-          {
-            "shudan-busy": busy,
-            "shudan-coordinates": showCoordinatesInside,
-          },
-          props.className
-        )}
-        style={{
-          ...(props.style ?? {}),
-          display: "inline-grid",
-          gridArea: mainContentGrid,
-          ...(showCoordinatesInside && {
-            gridTemplateRows: "1em auto 1em",
-            gridTemplateColumns: "1em auto 1em",
-          }),
-        }}
-      >
-        {showCoordinatesInside && (
-          <CoordX
-            xs={xs}
-            style={{ gridRow: "1", gridColumn: "2" }}
-            coordX={coordX}
-          />
-        )}
-
-        {showCoordinatesInside && (
-          <CoordY
-            height={height}
-            ys={ys}
-            style={{ gridRow: "2", gridColumn: "1" }}
-            coordY={coordY}
-          />
-        )}
-
-        <div
-          ref={contentRef}
-          className="shudan-content"
-          style={{
-            position: "relative",
-            width: `${xs.length}em`,
-            height: `${ys.length}em`,
-            gridRow: showCoordinates ? "2" : "1",
-            gridColumn: showCoordinates ? "2" : "1",
-          }}
-          {...pointerEventHandlers}
-        >
-          <Grid
-            vertexSize={vertexSize}
-            width={width}
-            height={height}
-            xs={xs}
-            ys={ys}
-            hoshis={hoshis}
-          />
-
-          <div
-            className="shudan-vertices"
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${xs.length}, 1em)`,
-              gridTemplateRows: `repeat(${ys.length}, 1em)`,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 1,
-            }}
-          >
-            {ys.map((y) => {
-              return xs.map((x) => {
-                let equalsVertex = (v: VertexData) => vertexEquals(v, [x, y]);
-                let selected = selectedVertices.some(equalsVertex);
-
-                return (
-                  <Vertex
-                    key={[x, y].join("-")}
-                    position={[x, y]}
-                    shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
-                    random={randomMap?.[y]?.[x]}
-                    sign={signMap?.[y]?.[x]}
-                    heat={heatMap?.[y]?.[x]}
-                    marker={markerMap?.[y]?.[x]}
-                    ghostStone={ghostStoneMap?.[y]?.[x]}
-                    dimmed={dimmedVertices.some(equalsVertex)}
-                    // TODO: Rename both of these to be clearer about the distinction
-                    animate={shiftingStones.some(equalsVertex)}
-                    changed={placedStones.some(equalsVertex)}
-                    paint={paintMap?.[y]?.[x]}
-                    paintLeft={paintMap?.[y]?.[x - 1]}
-                    paintRight={paintMap?.[y]?.[x + 1]}
-                    paintTop={paintMap?.[y - 1]?.[x]}
-                    paintBottom={paintMap?.[y + 1]?.[x]}
-                    paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
-                    paintTopRight={paintMap?.[y - 1]?.[x + 1]}
-                    paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
-                    paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
-                    selected={selected}
-                    selectedLeft={
-                      selected &&
-                      selectedVertices.some((v) => vertexEquals(v, [x - 1, y]))
-                    }
-                    selectedRight={
-                      selected &&
-                      selectedVertices.some((v) => vertexEquals(v, [x + 1, y]))
-                    }
-                    selectedTop={
-                      selected &&
-                      selectedVertices.some((v) => vertexEquals(v, [x, y - 1]))
-                    }
-                    selectedBottom={
-                      selected &&
-                      selectedVertices.some((v) => vertexEquals(v, [x, y + 1]))
-                    }
-                  />
-                );
-              });
-            })}
-          </div>
-          <svg
-            className="shudan-lines"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              pointerEvents: "none",
-              zIndex: 2,
-            }}
-          >
-            <g
-              transform={`translate(-${rangeX[0] * vertexSize} -${
-                rangeY[0] * vertexSize
-              })`}
-            >
-              {lines.map(({ v1, v2, type }, i) => (
-                <Line
-                  key={i}
-                  v1={v1}
-                  v2={v2}
-                  type={type}
-                  vertexSize={vertexSize}
-                />
-              ))}
-            </g>
-          </svg>
-        </div>
-        {showCoordinatesInside && (
-          <CoordY
-            height={height}
-            ys={ys}
-            style={{
-              gridRow: "2",
-              gridColumn: "3",
-            }}
-            coordY={coordY}
-          />
-        )}
-        {showCoordinatesInside && (
-          <CoordX
-            xs={xs}
-            style={{ gridRow: "3", gridColumn: "2" }}
-            coordX={coordX}
-          />
-        )}
-      </div>
-      {showCoordinatesOutside && (
-        <CoordY
-          height={height}
-          ys={ys}
-          style={{ gridRow: "2", gridColumn: "3" }}
-          coordY={coordY}
-          outside={true}
-        />
-      )}
-      {showCoordinatesOutside && (
-        <CoordX
-          xs={xs}
-          style={{ gridRow: "3", gridColumn: "2" }}
-          coordX={coordX}
-          outside={true}
-        />
-      )}
-    </div>
+        selectedVertices={selectedVertices}
+        dimmedVertices={dimmedVertices}
+        fuzzyStonePlacement={fuzzyStonePlacement}
+        lines={lines}
+        ghostStoneMap={ghostStoneMap}
+        heatMap={heatMap}
+        markerMap={markerMap}
+        paintMap={paintMap}
+      />
+    </GobanShell>
   );
 }

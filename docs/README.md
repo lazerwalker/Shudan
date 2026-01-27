@@ -335,7 +335,10 @@ dragging, you will get a hover callback with the vertex set to `null`. Dragging
 outside the goban does not fire a similar `null` callback (although you'll know
 at the end of the event whether they ended on a vertex or not).
 
-Note that the "click" event is not a "real" click — it will fire if the event was the result of a drag, rather than requiring the user to start and end a click/touch event on the same vertex. If this is a problem for your use case, feel free to open an issue, I'm open to alternatives.
+Note that the "click" event is not a "real" click — it will fire if the event
+was the result of a drag, rather than requiring the user to start and end a
+click/touch event on the same vertex. If this is a problem for your use case,
+feel free to open an issue, I'm open to alternatives.
 
 ### `BoundedGoban` Component
 
