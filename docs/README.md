@@ -13,7 +13,7 @@ Shudan is written for [React](https://reactjs.org), and is written in TypeScript
 
 You can install shindan from npm. 
 
-```npm install shindan```
+```npm install shindan-goban```
 
 To use this module, require it as follows:
 

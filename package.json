@@ -1,5 +1,5 @@
 {
-  "name": "shindan",
+  "name": "shindan-goban",
   "version": "0.0.1",
   "description": "A highly customizable, low-level React Goban component.",
   "type": "module",
