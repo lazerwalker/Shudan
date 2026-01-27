@@ -43,7 +43,19 @@ export function useGobanPointerEvents({
   const lastHoveredVertexRef = useRef<Vertex | null>(null);
   const isPointerDownRef = useRef(false);
 
-  // Helper to get vertex from pointer coordinates
+  function clearLongPressTimer() {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }
+
+  function resetState() {
+    isPointerDownRef.current = false;
+    pointerStartVertexRef.current = null;
+    longPressTriggeredRef.current = false;
+  }
+
   const getVertexFromEvent = useCallback(
     (e: React.PointerEvent | React.MouseEvent): Vertex | null => {
       if (!contentRef.current) return null;
@@ -56,9 +68,7 @@ export function useGobanPointerEvents({
   // Cleanup long press timer on unmount
   useEffect(() => {
     return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
+      clearLongPressTimer();
     };
   }, []);
 
@@ -74,13 +84,9 @@ export function useGobanPointerEvents({
       pointerStartVertexRef.current = vertex;
       longPressTriggeredRef.current = false;
 
-      // Clear any existing timer
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
+      clearLongPressTimer();
 
-      // Start long press timer for touch/pen only (mouse has right-click)
+      // Long press is for anything that isn't mouse (which uses right-click)
       if (vertex && onVertexLongPress && e.pointerType !== "mouse") {
         longPressTimerRef.current = setTimeout(() => {
           longPressTriggeredRef.current = true;
@@ -106,11 +112,7 @@ export function useGobanPointerEvents({
           startVertex &&
           !vertexEquals(vertex, startVertex)
         ) {
-          // Cancel long press on drag
-          if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-          }
+          clearLongPressTimer();
           onVertexDrag(vertex, e);
         }
       } else {
@@ -136,13 +138,6 @@ export function useGobanPointerEvents({
     (e: React.PointerEvent) => {
       if (!e.isPrimary) return;
 
-      // Clear long press timer
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-
-      // Fire click if we tracked a pointerdown and not a long press
       if (isPointerDownRef.current && !longPressTriggeredRef.current) {
         const vertex = getVertexFromEvent(e);
         if (vertex && onVertexClick) {
@@ -150,10 +145,8 @@ export function useGobanPointerEvents({
         }
       }
 
-      // Reset state
-      isPointerDownRef.current = false;
-      pointerStartVertexRef.current = null;
-      longPressTriggeredRef.current = false;
+      clearLongPressTimer();
+      resetState();
     },
     [getVertexFromEvent, onVertexClick]
   );
@@ -163,26 +156,16 @@ export function useGobanPointerEvents({
       if (!e.isPrimary) return;
 
       // Apple Pencil can fire pointercancel instead of pointerup
-      // Treat as click if we tracked a pointerdown and no long press
-      if (
-        isPointerDownRef.current &&
-        !longPressTriggeredRef.current &&
-        onVertexClick
-      ) {
+      // So run same logic as pointerup
+      if (isPointerDownRef.current && !longPressTriggeredRef.current) {
         const vertex = getVertexFromEvent(e);
-        if (vertex) {
+        if (vertex && onVertexClick) {
           onVertexClick(vertex, e);
         }
       }
 
-      // Clear timer and reset state
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-      isPointerDownRef.current = false;
-      pointerStartVertexRef.current = null;
-      longPressTriggeredRef.current = false;
+      clearLongPressTimer();
+      resetState();
     },
     [getVertexFromEvent, onVertexClick]
   );

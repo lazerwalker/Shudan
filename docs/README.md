@@ -4,21 +4,26 @@
 
 ### About Shudan
 
-Shindan is the Goban component that powers the upcoming app [Tenuki](https://forums.online-go.com/t/tenuki-a-new-ios-ogs-client/58792/59). It is based on [Shudan](https://github.com/SabakiHQ/shudan), which powers [Sabaki](https://sabaki.yichuanshen.de). It is licensed under the MIT license
-and supports modern browsers. 
+Shindan is the Goban component that powers the upcoming app
+[Tenuki](https://forums.online-go.com/t/tenuki-a-new-ios-ogs-client/58792/59).
+It is based on [Shudan](https://github.com/SabakiHQ/shudan), which powers
+[Sabaki](https://sabaki.yichuanshen.de). It is licensed under the MIT license
+and supports modern browsers.
 
-Shudan is written for [React](https://reactjs.org), and is written in TypeScript, although applications written in vanilla JS should be able to use it just fine.
+Shudan is written for [React](https://reactjs.org), and is written in
+TypeScript, although applications written in vanilla JS should be able to use it
+just fine.
 
 ### Installation
 
-You can install shindan from npm. 
+You can install shindan from npm.
 
-```npm install shindan-goban```
+`npm install shindan-goban`
 
 To use this module, require it as follows:
 
 ```ts
-import { Goban } from 'shindan'
+import { Goban } from "shindan";
 
 const CustomComponent = (props) => (
   <Goban vertexSize={24} signMap={props.signMap} />
@@ -306,16 +311,31 @@ All props are optional. The following props are supported:
 - `onVertexRightClick` `<Function>`
 - `onVertexLongPress` `<Function>`
 
-These functions will be called when the user interacts with a vertex. Under the hood this uses `pointer` events, so it will work with both touch and mouse input (and includes specific handling for the Apple Pencil, which tends to aggressively send `touchcancel`/`pointercancel` events instead of `touchend`/`pointerup`). On mobile, you will not get `onVertexHover` events, unless you are using a device that supports hover input (e.g. Apple Pencil on some devices). When moving the cursor from inside to outside the goban, you will get a drag or hover callback with the vertex set to `null`.
+These functions will be called when the user interacts with a vertex. Under the
+hood this uses `pointer` events, so it will work with both touch and mouse input
+(and includes specific handling for the Apple Pencil, which tends to
+aggressively send `touchcancel`/`pointercancel` events instead of
+`touchend`/`pointerup`). On mobile, you will not get `onVertexHover` events,
+unless you are using a device that supports hover input (e.g. Apple Pencil on
+some devices).
 
 Your handlers will be called with two arguments:
 
 1. `vertex` [`<Vertex>`](#vertex-representation)
 2. `evt` - The original event
 
-By default a long-press will be triggered after 500ms when using an input method that is not `mouse` (e.g. `touch` or `pen`). The `longPressThreshold` prop lets you configure this, with a numeric threshold in milliseconds.
+By default a long-press will be triggered after 500ms when using an input method
+that is not `mouse` (e.g. `touch` or `pen`). The `longPressThreshold` prop lets
+you configure this, with a numeric threshold in milliseconds.
 
 - `longPressThreshold` `<number>`
+
+When moving the cursor from inside to outside the goban, if the user is not
+dragging, you will get a hover callback with the vertex set to `null`. Dragging
+outside the goban does not fire a similar `null` callback (although you'll know
+at the end of the event whether they ended on a vertex or not).
+
+Note that the "click" event is not a "real" click — it will fire if the event was the result of a drag, rather than requiring the user to start and end a click/touch event on the same vertex. If this is a problem for your use case, feel free to open an issue, I'm open to alternatives.
 
 ### `BoundedGoban` Component
 

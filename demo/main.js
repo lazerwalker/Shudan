@@ -325,7 +325,7 @@ class App extends Component {
         }),
         h(this.CheckBox, {
           stateKey: "coordinatesOnOutside",
-          text: "Coordinates on outside"
+          text: "Coordinates on outside",
         }),
         h(this.CheckBox, {
           stateKey: "alternateCoordinates",
@@ -357,7 +357,11 @@ class App extends Component {
         h(this.CheckBox, { stateKey: "showLines", text: "Show lines" }),
         h(this.CheckBox, { stateKey: "showSelection", text: "Show selection" }),
         h(this.CheckBox, { stateKey: "isBusy", text: "Busy" }),
-        h("div", {style: { paddingTop: "1em" }}, "Left-click or touch to place black stones, right-click or long-press to place white stones.")
+        h(
+          "div",
+          { style: { paddingTop: "1em" } },
+          "Left-click or touch to place black stones, right-click or long-press to place white stones."
+        )
       ),
 
       h(
