@@ -1,6 +1,10 @@
-# Shudan Goban
+# Shindan Goban
 
-A highly customizable, low-level Preact Goban component.
+A highly customizable, low-level React Goban component. It is a fork of [Shudan](https://github.com/sabaki), but uses modern React rather than Preact, is TypeScript-native instead of JS with a hand-written type definition file, and is in the process of being extended to support an optional canvas renderer for performance reasons.
+
+The rest of this doc is still written for Shudan, but should be more or less the same. 
+
+(Why the name? Shudan (手談) means "hand talk", an evocative euphemistic name for the game of Go. "Shin" (新) can mean "new", reflecting that this is a newer version of Shudan, but as a whole word Shindan (診断) also means "diagnosis", which feels appropriate for a library used in tools to help analyze Go games).
 
 ![Screenshot](./screenshot.png)
 
