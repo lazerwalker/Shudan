@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect, useCallback } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import classnames from "classnames";
 
 export { diffSignMap, vertexFromPoint } from "./helper.js";
@@ -10,7 +10,6 @@ import {
   neighborhood,
   vertexEquals,
   diffSignMap,
-  vertexFromPoint,
   range,
   getHoshis,
   type Vertex as VertexData,
@@ -20,6 +19,7 @@ import Grid from "./Grid.js";
 import Vertex, { GhostStone, HeatVertex } from "./Vertex.js";
 import Line, { LineMarker } from "./Line.js";
 import { Marker } from "./Marker.js";
+import { useGobanPointerEvents } from "./useGobanPointerEvents.js";
 
 export interface GobanProps {
   id?: string;
@@ -101,13 +101,7 @@ export default function Goban(props: GobanProps) {
     null
   );
 
-  // Event handling refs
   const contentRef = useRef<HTMLDivElement>(null);
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressTriggeredRef = useRef(false);
-  const pointerStartVertexRef = useRef<VertexData | null>(null);
-  const lastHoveredVertexRef = useRef<VertexData | null>(null);
-  const isPointerDownRef = useRef(false);
 
   const width = signMap.length === 0 ? 0 : signMap[0].length;
   const height = signMap.length;
@@ -122,173 +116,18 @@ export default function Goban(props: GobanProps) {
 
   const hoshis = useMemo(() => getHoshis(width, height), [width, height]);
 
-  // Helper to get vertex from pointer coordinates
-  const getVertexFromEvent = useCallback(
-    (e: React.PointerEvent | React.MouseEvent): VertexData | null => {
-      if (!contentRef.current) return null;
-      const rect = contentRef.current.getBoundingClientRect();
-      return vertexFromPoint(e.clientX, e.clientY, rect, vertexSize, xs, ys);
-    },
-    [vertexSize, xs, ys]
-  );
-
-  // Pointer event handlers
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (!e.isPrimary) return;
-
-      // Only track left-button for click/long-press (right-click handled by contextmenu)
-      if (e.button !== 0) return;
-
-      isPointerDownRef.current = true;
-      const vertex = getVertexFromEvent(e);
-      pointerStartVertexRef.current = vertex;
-      longPressTriggeredRef.current = false;
-
-      // Clear any existing timer
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-
-      // Start long press timer for touch/pen only (mouse has right-click)
-      if (vertex && onVertexLongPress && e.pointerType !== "mouse") {
-        longPressTimerRef.current = setTimeout(() => {
-          longPressTriggeredRef.current = true;
-          onVertexLongPress(vertex, e);
-        }, longPressThreshold);
-      }
-    },
-    [getVertexFromEvent, onVertexLongPress, longPressThreshold]
-  );
-
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!e.isPrimary) return;
-
-      const vertex = getVertexFromEvent(e);
-
-      if (isPointerDownRef.current) {
-        // Dragging - check if moved to a different vertex
-        if (
-          onVertexDrag &&
-          vertex &&
-          pointerStartVertexRef.current &&
-          !vertexEquals(vertex, pointerStartVertexRef.current)
-        ) {
-          // Cancel long press on drag
-          if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-          }
-          onVertexDrag(vertex, e);
-        }
-      } else {
-        // Hovering - check if vertex changed
-        const lastVertex = lastHoveredVertexRef.current;
-        const vertexChanged =
-          (vertex === null && lastVertex !== null) ||
-          (vertex !== null && lastVertex === null) ||
-          (vertex !== null &&
-            lastVertex !== null &&
-            !vertexEquals(vertex, lastVertex));
-
-        if (onVertexHover && vertexChanged) {
-          onVertexHover(vertex, e);
-        }
-        lastHoveredVertexRef.current = vertex;
-      }
-    },
-    [getVertexFromEvent, onVertexDrag, onVertexHover]
-  );
-
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (!e.isPrimary) return;
-
-      // Clear long press timer
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-
-      // Fire click if we tracked a pointerdown and not a long press
-      if (isPointerDownRef.current && !longPressTriggeredRef.current) {
-        const vertex = getVertexFromEvent(e);
-        if (vertex && onVertexClick) {
-          onVertexClick(vertex, e);
-        }
-      }
-
-      // Reset state
-      isPointerDownRef.current = false;
-      pointerStartVertexRef.current = null;
-      longPressTriggeredRef.current = false;
-    },
-    [getVertexFromEvent, onVertexClick]
-  );
-
-  const handlePointerCancel = useCallback(
-    (e: React.PointerEvent) => {
-      if (!e.isPrimary) return;
-
-      // Apple Pencil can fire pointercancel instead of pointerup
-      // Treat as click if we tracked a pointerdown and no long press
-      if (
-        isPointerDownRef.current &&
-        !longPressTriggeredRef.current &&
-        onVertexClick
-      ) {
-        const vertex = getVertexFromEvent(e);
-        if (vertex) {
-          onVertexClick(vertex, e);
-        }
-      }
-
-      // Clear timer and reset state
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-      isPointerDownRef.current = false;
-      pointerStartVertexRef.current = null;
-      longPressTriggeredRef.current = false;
-    },
-    [getVertexFromEvent, onVertexClick]
-  );
-
-  const handlePointerLeave = useCallback(
-    (e: React.PointerEvent) => {
-      if (!e.isPrimary) return;
-
-      // Fire hover with null when leaving board
-      if (onVertexHover && lastHoveredVertexRef.current !== null) {
-        onVertexHover(null, e);
-        lastHoveredVertexRef.current = null;
-      }
-    },
-    [onVertexHover]
-  );
-
-  const handleContextMenu = useCallback(
-    (e: React.MouseEvent) => {
-      const vertex = getVertexFromEvent(e as unknown as React.PointerEvent);
-      if (vertex && onVertexRightClick) {
-        e.preventDefault();
-        onVertexRightClick(vertex, e);
-      }
-    },
-    [getVertexFromEvent, onVertexRightClick]
-  );
-
-  // Cleanup long press timer on unmount
-  useEffect(() => {
-    return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
-    };
-  }, []);
+  const pointerEventHandlers = useGobanPointerEvents({
+    contentRef,
+    vertexSize,
+    xs,
+    ys,
+    onVertexClick,
+    onVertexRightClick,
+    onVertexLongPress,
+    onVertexHover,
+    onVertexDrag,
+    longPressThreshold,
+  });
 
   useEffect(() => {
     const sizeChanged =
@@ -472,12 +311,7 @@ export default function Goban(props: GobanProps) {
             gridRow: showCoordinates ? "2" : "1",
             gridColumn: showCoordinates ? "2" : "1",
           }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
-          onPointerLeave={handlePointerLeave}
-          onContextMenu={handleContextMenu}
+          {...pointerEventHandlers}
         >
           <Grid
             vertexSize={vertexSize}
