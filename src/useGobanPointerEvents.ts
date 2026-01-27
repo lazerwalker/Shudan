@@ -1,15 +1,13 @@
 import { useCallback, useRef, useEffect, RefObject } from "react";
 import { vertexFromPoint, vertexEquals, type Vertex } from "./helper.js";
 
-export interface GobanPointerEventHandlers {
+export interface UseGobanPointerEventsOptions {
   onVertexClick?: (vertex: Vertex, evt: React.PointerEvent) => void;
   onVertexRightClick?: (vertex: Vertex, evt: React.MouseEvent) => void;
   onVertexLongPress?: (vertex: Vertex, evt: React.PointerEvent) => void;
   onVertexHover?: (vertex: Vertex | null, evt: React.PointerEvent) => void;
   onVertexDrag?: (vertex: Vertex, evt: React.PointerEvent) => void;
-}
 
-export interface UseGobanPointerEventsOptions extends GobanPointerEventHandlers {
   contentRef: RefObject<HTMLDivElement | null>;
   vertexSize: number;
   xs: number[];
@@ -42,7 +40,6 @@ export function useGobanPointerEvents({
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggeredRef = useRef(false);
   const pointerStartVertexRef = useRef<Vertex | null>(null);
-  const lastDragVertexRef = useRef<Vertex | null>(null);
   const lastHoveredVertexRef = useRef<Vertex | null>(null);
   const isPointerDownRef = useRef(false);
 
@@ -75,7 +72,6 @@ export function useGobanPointerEvents({
       isPointerDownRef.current = true;
       const vertex = getVertexFromEvent(e);
       pointerStartVertexRef.current = vertex;
-      lastDragVertexRef.current = vertex;
       longPressTriggeredRef.current = false;
 
       // Clear any existing timer
@@ -102,12 +98,13 @@ export function useGobanPointerEvents({
       const vertex = getVertexFromEvent(e);
 
       if (isPointerDownRef.current) {
-        // Dragging - check if moved to a different vertex
+        // Dragging - check if moved to a different vertex than start
+        const startVertex = pointerStartVertexRef.current;
         if (
           onVertexDrag &&
           vertex &&
-          pointerStartVertexRef.current &&
-          !vertexEquals(vertex, pointerStartVertexRef.current)
+          startVertex &&
+          !vertexEquals(vertex, startVertex)
         ) {
           // Cancel long press on drag
           if (longPressTimerRef.current) {
