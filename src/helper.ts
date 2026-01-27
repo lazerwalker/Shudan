@@ -29,7 +29,8 @@ export const range = (n: number): number[] =>
     .fill(0)
     .map((_, i) => i);
 
-export const random = (n: number): number => Math.floor(Math.random() * (n + 1));
+export const random = (n: number): number =>
+  Math.floor(Math.random() * (n + 1));
 
 export const neighborhood = ([x, y]: Vertex): Vertex[] => [
   [x, y],
@@ -39,10 +40,13 @@ export const neighborhood = ([x, y]: Vertex): Vertex[] => [
   [x, y + 1],
 ];
 
-export const vertexEquals = ([x1, y1]: Vertex, [x2, y2]: Vertex): boolean => x1 === x2 && y1 === y2;
+export const vertexEquals = ([x1, y1]: Vertex, [x2, y2]: Vertex): boolean =>
+  x1 === x2 && y1 === y2;
 
-export const lineEquals = ([v1, w1]: [Vertex, Vertex], [v2, w2]: [Vertex, Vertex]): boolean =>
-  vertexEquals(v1, v2) && vertexEquals(w1, w2);
+export const lineEquals = (
+  [v1, w1]: [Vertex, Vertex],
+  [v2, w2]: [Vertex, Vertex]
+): boolean => vertexEquals(v1, v2) && vertexEquals(w1, w2);
 
 // We're type-coercing here, but it's fine, Math.sign(undefined) is NaN and will return false anyway unless they're all undefined
 export const signEquals = (...xs: (number | undefined)[]): boolean =>
@@ -72,7 +76,10 @@ export function getHoshis(width: number, height: number): Vertex[] {
   return result;
 }
 
-export function readjustShifts(shiftMap: number[][], vertex: Vertex | null = null) {
+export function readjustShifts(
+  shiftMap: number[][],
+  vertex: Vertex | null = null
+) {
   if (vertex == null) {
     for (let y = 0; y < shiftMap.length; y++) {
       for (let x = 0; x < shiftMap[0].length; x++) {
@@ -132,7 +139,7 @@ export function diffSignMap(before: number[][], after: number[][]): Vertex[] {
     return [];
   }
 
-  let result: Vertex[]   = [];
+  let result: Vertex[] = [];
 
   for (let y = 0; y < before.length; y++) {
     for (let x = 0; x < before[0].length; x++) {

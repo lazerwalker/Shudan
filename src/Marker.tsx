@@ -18,12 +18,7 @@ interface MarkerProps extends Marker {
   sign: Sign;
   zIndex?: number;
 }
-export default function Marker({
-  sign,
-  type,
-  label,
-  zIndex,
-}: MarkerProps) {
+export default function Marker({ sign, type, label, zIndex }: MarkerProps) {
   let containerProps = {
     className: "shudan-marker",
     style: {

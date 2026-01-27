@@ -330,56 +330,44 @@ export default function Goban(props: GobanProps) {
                 return (
                   <Vertex
                     key={[x, y].join("-")}
-                      position={[x, y]}
-
-                        shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
-                        random={randomMap?.[y]?.[x]}
-                        sign={signMap?.[y]?.[x]}
-
-                        heat={heatMap?.[y]?.[x]}
-                        marker={markerMap?.[y]?.[x]}
-                        ghostStone={ghostStoneMap?.[y]?.[x]}
-                        dimmed={dimmedVertices.some(equalsVertex)}
-                        // TODO: Rename both of these to be clearer about the distinction
-                        animate={shiftingStones.some(equalsVertex)}
-                        changed={placedStones.some(equalsVertex)}
-
-                        paint={paintMap?.[y]?.[x]}
-                        paintLeft={paintMap?.[y]?.[x - 1]}
-                        paintRight={paintMap?.[y]?.[x + 1]}
-                        paintTop={paintMap?.[y - 1]?.[x]}
-                        paintBottom={paintMap?.[y + 1]?.[x]}
-                        paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
-                        paintTopRight={paintMap?.[y - 1]?.[x + 1]}
-                        paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
-                        paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
-
-                        selected={selected}
-                        selectedLeft={
-                          selected &&
-                          selectedVertices.some((v) =>
-                            vertexEquals(v, [x - 1, y])
-                          )
-                        }                          
-                        selectedRight={
-                          selected &&
-                          selectedVertices.some((v) =>
-                            vertexEquals(v, [x + 1, y])
-                          )
-                        }
-                        selectedTop={
-                          selected &&
-                          selectedVertices.some((v) =>
-                            vertexEquals(v, [x, y - 1])
-                          )
-                        }
-                        selectedBottom={
-                          selected &&
-                          selectedVertices.some((v) =>
-                            vertexEquals(v, [x, y + 1])
-                          )
-                        }
-                      {...vertexEventProps}
+                    position={[x, y]}
+                    shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
+                    random={randomMap?.[y]?.[x]}
+                    sign={signMap?.[y]?.[x]}
+                    heat={heatMap?.[y]?.[x]}
+                    marker={markerMap?.[y]?.[x]}
+                    ghostStone={ghostStoneMap?.[y]?.[x]}
+                    dimmed={dimmedVertices.some(equalsVertex)}
+                    // TODO: Rename both of these to be clearer about the distinction
+                    animate={shiftingStones.some(equalsVertex)}
+                    changed={placedStones.some(equalsVertex)}
+                    paint={paintMap?.[y]?.[x]}
+                    paintLeft={paintMap?.[y]?.[x - 1]}
+                    paintRight={paintMap?.[y]?.[x + 1]}
+                    paintTop={paintMap?.[y - 1]?.[x]}
+                    paintBottom={paintMap?.[y + 1]?.[x]}
+                    paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
+                    paintTopRight={paintMap?.[y - 1]?.[x + 1]}
+                    paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
+                    paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
+                    selected={selected}
+                    selectedLeft={
+                      selected &&
+                      selectedVertices.some((v) => vertexEquals(v, [x - 1, y]))
+                    }
+                    selectedRight={
+                      selected &&
+                      selectedVertices.some((v) => vertexEquals(v, [x + 1, y]))
+                    }
+                    selectedTop={
+                      selected &&
+                      selectedVertices.some((v) => vertexEquals(v, [x, y - 1]))
+                    }
+                    selectedBottom={
+                      selected &&
+                      selectedVertices.some((v) => vertexEquals(v, [x, y + 1]))
+                    }
+                    {...vertexEventProps}
                   />
                 );
               });

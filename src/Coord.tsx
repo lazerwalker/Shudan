@@ -75,7 +75,7 @@ export class CoordY extends Component<CoordYProps> {
             key: i,
             style: {
               height: "1em",
-              textAlign: "center"
+              textAlign: "center",
             },
           },
           h(
@@ -84,11 +84,17 @@ export class CoordY extends Component<CoordYProps> {
               style: {
                 display: "block",
                 ...(isMultiChar
-                  ? { fontSize: "0.45em", lineHeight: "1em", }
+                  ? { fontSize: "0.45em", lineHeight: "1em" }
                   : {}),
               },
             },
-            (isMultiChar ? text.split("").map((char, index) => h("div", { key: index, style: { height: "1em" } }, char)) : text)
+            isMultiChar
+              ? text
+                  .split("")
+                  .map((char, index) =>
+                    h("div", { key: index, style: { height: "1em" } }, char)
+                  )
+              : text
           )
         );
       })
