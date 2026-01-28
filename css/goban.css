@@ -162,10 +162,11 @@
 /* Markers */
 
 .shudan-vertex .shudan-marker {
-    left: .04em;
-    top: .04em;
+    left: 50%;
+    top: 50%;
     width: calc(100% - .08em);
     height: calc(100% - .08em);
+    transform: translate(-50%, -50%);
     text-align: center;
     fill: var(--shudan-board-background-color);
     stroke: var(--shudan-board-foreground-color);
@@ -174,8 +175,6 @@
   }
   .shudan-vertex.shudan-sign_1 .shudan-marker,
   .shudan-vertex.shudan-sign_-1 .shudan-marker {
-    left: 0;
-    top: 0;
     width: 100%;
     height: 100%;
     fill: none;
@@ -205,10 +204,10 @@
 
 @keyframes shudan-rotation {
   from {
-    transform: rotate(0deg);
+    transform: translate(-50%, -50%) rotate(0deg);
   }
   to {
-    transform: rotate(360deg);
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 
