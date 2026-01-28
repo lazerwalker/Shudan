@@ -55,6 +55,7 @@ export default function Marker({ sign, type, label, zIndex }: MarkerProps) {
           ? [
               sign === 0 &&
                 h("rect", {
+                  key: "bg",
                   x: 0.25,
                   y: 0.25,
                   width: 0.5,
@@ -62,6 +63,7 @@ export default function Marker({ sign, type, label, zIndex }: MarkerProps) {
                   stroke: "none",
                 }),
               h("path", {
+                key: "x",
                 d: "M 0 0 L .5 .5 M .5 0 L 0 .5",
                 transform: "translate(.25 .25)",
                 vectorEffect: "non-scaling-stroke",
