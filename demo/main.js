@@ -201,19 +201,20 @@ class App extends Component {
     this.state = {
       board: new Board(signMap),
       vertexSize: 24,
-      showCoordinates: false,
+      useCanvasRenderer: true,
+      showCoordinates: true,
       coordinatesOnOutside: false,
       alternateCoordinates: false,
       showCorner: false,
-      showDimmedStones: false,
-      fuzzyStonePlacement: false,
-      animateStonePlacement: false,
-      showPaintMap: false,
-      showHeatMap: false,
-      showMarkerMap: false,
-      showGhostStones: false,
-      showLines: false,
-      showSelection: false,
+      showDimmedStones: true,
+      fuzzyStonePlacement: true,
+      animateStonePlacement: true,
+      showPaintMap: true,
+      showHeatMap: true,
+      showMarkerMap: true,
+      showGhostStones: true,
+      showLines: true,
+      showSelection: true,
       isBusy: false,
     };
 
@@ -223,6 +224,7 @@ class App extends Component {
   render() {
     let {
       vertexSize,
+      useCanvasRenderer,
       showCoordinates,
       coordinatesOnOutside,
       alternateCoordinates,
@@ -320,6 +322,10 @@ class App extends Component {
         ),
 
         h(this.CheckBox, {
+          stateKey: "useCanvasRenderer",
+          text: "Use canvas renderer",
+        }),
+        h(this.CheckBox, {
           stateKey: "showCoordinates",
           text: "Show coordinates",
         }),
@@ -375,6 +381,7 @@ class App extends Component {
           },
 
           vertexSize,
+          renderer: useCanvasRenderer ? "canvas" : "dom",
           animate: true,
           busy: this.state.isBusy,
           rangeX: showCorner ? [8, 18] : undefined,
@@ -454,4 +461,29 @@ class App extends Component {
   }
 }
 
-createRoot(document.getElementById("root")).render(h(App));
+const appRef = { current: null };
+
+class AppWrapper extends Component {
+  componentDidMount() {
+    appRef.current = this.appInstance;
+  }
+
+  render() {
+    return h(App, { ref: (instance) => (this.appInstance = instance) });
+  }
+}
+
+createRoot(document.getElementById("root")).render(h(AppWrapper));
+
+// Expose toggle function for debugging
+window.toggleRenderer = () => {
+  if (appRef.current) {
+    appRef.current.setState((s) => ({
+      useCanvasRenderer: !s.useCanvasRenderer,
+    }));
+    console.log(
+      "Renderer:",
+      appRef.current.state.useCanvasRenderer ? "DOM" : "Canvas"
+    );
+  }
+};

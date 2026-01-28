@@ -44,6 +44,14 @@ export type VertexProps = {
   selectedRight?: boolean;
   selectedTop?: boolean;
   selectedBottom?: boolean;
+
+  /** When true, the stone visual is rendered externally (e.g. on canvas) - skip rendering .shudan-inner */
+  stoneRenderedExternally?: boolean;
+
+  /** Explicit CSS grid row (1-indexed). Used for sparse rendering where some vertices return null. */
+  gridRow?: number;
+  /** Explicit CSS grid column (1-indexed). Used for sparse rendering where some vertices return null. */
+  gridColumn?: number;
 };
 
 const absoluteStyle = (zIndex?: number): CSSProperties => ({
@@ -77,6 +85,9 @@ function Vertex(props: VertexProps) {
     selectedRight,
     selectedTop,
     selectedBottom,
+    stoneRenderedExternally,
+    gridRow,
+    gridColumn,
   } = props;
 
   let markerMarkup = (zIndex?: number) =>
@@ -98,6 +109,8 @@ function Vertex(props: VertexProps) {
       title: marker?.label,
       style: {
         position: "relative",
+        gridRow,
+        gridColumn,
       },
       className: classnames(
         "shudan-vertex",
@@ -109,6 +122,7 @@ function Vertex(props: VertexProps) {
           "shudan-dimmed": dimmed,
           "shudan-animate": animate,
           "shudan-changed": changed,
+          "shudan-stone-external": stoneRenderedExternally,
 
           [`shudan-paint_${paint! > 0 ? 1 : -1}`]: !!paint,
           "shudan-paintedleft": !!paint && signEquals(paintLeft, paint),
@@ -148,6 +162,7 @@ function Vertex(props: VertexProps) {
       { key: "stone", className: "shudan-stone", style: absoluteStyle(2) },
 
       !!sign &&
+        !stoneRenderedExternally &&
         h(
           "div",
           {
@@ -214,11 +229,13 @@ function Vertex(props: VertexProps) {
         style: absoluteStyle(4),
       }),
 
-    h("div", {
-      key: "heat",
-      className: "shudan-heat",
-      style: absoluteStyle(5),
-    }),
+    !!heat &&
+      heat.strength > 0 &&
+      h("div", {
+        key: "heat",
+        className: "shudan-heat",
+        style: absoluteStyle(5),
+      }),
     heat?.text != null &&
       h(
         "div",

@@ -15,9 +15,39 @@ import {
 import { GhostStone, HeatVertex } from "./Vertex.js";
 import { LineMarker } from "./Line.js";
 import { Marker } from "./Marker.js";
+
+export type RendererProps = {
+  vertexSize: number;
+  width: number;
+  height: number;
+  xs: number[];
+  ys: number[];
+  hoshis: VertexData[];
+
+  signMap: Map<0 | 1 | -1>;
+
+  markerMap?: Map<Marker | null>;
+  paintMap?: Map<0 | 1 | -1>;
+  ghostStoneMap?: Map<GhostStone | null>;
+  heatMap?: Map<HeatVertex | null>;
+
+  fuzzyStonePlacement: boolean;
+  shiftMap: number[][];
+  randomMap: number[][];
+
+  selectedVertices: VertexData[];
+  dimmedVertices: VertexData[];
+  shiftingStones: VertexData[];
+  placedStones: VertexData[];
+  lines: LineMarker[];
+
+  rangeX: [number, number];
+  rangeY: [number, number];
+};
 import { useGobanPointerEvents } from "./useGobanPointerEvents.js";
 import GobanShell from "./GobanShell.js";
 import DOMRenderer from "./DOMRenderer.js";
+import CanvasRenderer from "./CanvasRenderer.js";
 
 function useForceUpdate() {
   const [, setState] = useState(0);
@@ -34,6 +64,7 @@ export interface GobanProps {
   vertexSize?: number;
   rangeX?: [start: number, stop: number];
   rangeY?: [start: number, stop: number];
+  renderer?: "dom" | "canvas";
 
   showCoordinates?: boolean;
   coordinatesOnOutside?: boolean;
@@ -85,6 +116,7 @@ export default function Goban(props: GobanProps) {
     dimmedVertices = [],
     rangeX = [0, Infinity],
     rangeY = [0, Infinity],
+    renderer = "dom",
     onVertexClick,
     onVertexRightClick,
     onVertexLongPress,
@@ -219,6 +251,30 @@ export default function Goban(props: GobanProps) {
       );
   }, [width, height]);
 
+  const rendererProps: RendererProps = {
+    width,
+    height,
+    xs,
+    ys,
+    vertexSize,
+    signMap,
+    hoshis,
+    shiftingStones: shiftingStonesRef.current,
+    placedStones: placedStonesRef.current,
+    rangeX,
+    rangeY,
+    shiftMap: shiftMapRef.current,
+    randomMap,
+    selectedVertices,
+    dimmedVertices,
+    fuzzyStonePlacement,
+    lines,
+    ghostStoneMap,
+    heatMap,
+    markerMap,
+    paintMap,
+  };
+
   return (
     <GobanShell
       vertexSize={vertexSize}
@@ -237,29 +293,11 @@ export default function Goban(props: GobanProps) {
       contentProps={pointerEventHandlers}
       contentRef={contentRef}
     >
-      <DOMRenderer
-        width={width}
-        height={height}
-        xs={xs}
-        ys={ys}
-        vertexSize={vertexSize}
-        signMap={signMap}
-        hoshis={hoshis}
-        shiftingStones={shiftingStonesRef.current}
-        placedStones={placedStonesRef.current}
-        rangeX={rangeX}
-        rangeY={rangeY}
-        shiftMap={shiftMapRef.current}
-        randomMap={randomMap}
-        selectedVertices={selectedVertices}
-        dimmedVertices={dimmedVertices}
-        fuzzyStonePlacement={fuzzyStonePlacement}
-        lines={lines}
-        ghostStoneMap={ghostStoneMap}
-        heatMap={heatMap}
-        markerMap={markerMap}
-        paintMap={paintMap}
-      />
+      {renderer === "canvas" ? (
+        <CanvasRenderer {...rendererProps} />
+      ) : (
+        <DOMRenderer {...rendererProps} />
+      )}
     </GobanShell>
   );
 }

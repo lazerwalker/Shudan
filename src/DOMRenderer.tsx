@@ -1,39 +1,10 @@
-import { vertexEquals, type Vertex as VertexData, type Map } from "./helper.js";
+import { vertexEquals, type Vertex as VertexData } from "./helper.js";
 import Grid from "./Grid.js";
-import Vertex, { GhostStone, HeatVertex } from "./Vertex.js";
-import Line, { LineMarker } from "./Line.js";
-import { Marker } from "./main.js";
+import Vertex from "./Vertex.js";
+import Line from "./Line.js";
+import { type RendererProps } from "./Goban.js";
 
-type DOMRendererProps = {
-  vertexSize: number;
-  width: number;
-  height: number;
-  xs: number[];
-  ys: number[];
-  hoshis: VertexData[];
-
-  signMap: Map<0 | 1 | -1>;
-
-  markerMap?: Map<Marker | null>;
-  paintMap?: Map<0 | 1 | -1>;
-  ghostStoneMap?: Map<GhostStone | null>;
-  heatMap?: Map<HeatVertex | null>;
-
-  fuzzyStonePlacement: boolean;
-  shiftMap: number[][];
-  randomMap: number[][];
-
-  selectedVertices: VertexData[];
-  dimmedVertices: VertexData[];
-  shiftingStones: VertexData[];
-  placedStones: VertexData[];
-  lines: LineMarker[];
-
-  rangeX: [number, number];
-  rangeY: [number, number];
-};
-
-export default function DOMRenderer(props: DOMRendererProps) {
+export default function DOMRenderer(props: RendererProps) {
   const {
     vertexSize,
     width,
