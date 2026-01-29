@@ -156,6 +156,10 @@ All props are optional. The following props are supported:
 
 #### Board Props
 
+- `renderer` `<"dom"|"canvas">` - Default: `dom`
+
+  Determines whether the goban renders using the old DOM-based renderer, or the new hybrid renderer that renders the grid/hoshi and static solid stones on canvas and renders everything else to DOM. Once the canvas renderer is more stable, it will likely become the default, as it is much more performant.
+
 - `busy` `<boolean>` - Default: `false`
 
   Determines whether component is busy. When busy, no user input are accepted.

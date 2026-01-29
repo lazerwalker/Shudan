@@ -37,6 +37,8 @@ which feels appropriate for a library used in tools to help analyze Go games.
   specific support for Apple Pencil, which often sends 'touchcancel' events
   instead of 'touchend'. This is a breaking change.
 - `BoundedGoban` guarantees that you will be given a Goban with the exact given `width` and `height`. It automatically calculates the largest possible `vertexSize` for a given size, and fills in any extra space as padding within the board. You can pass in both `width` and `height`, or only one. The new autosizer works synchronously, so the `onResized` prop has been removed
+- When `fuzzyStonePlacement` and `animateFuzzyStones` are true in Shudan, both newly-placed stones and their neighbors are given the `animated` class. Shindan splits that out into an `"animated"` class for a newly-placed stone, and `"changed"` for stones that are merely changing their fuzzily-shifted position. This may be useful if you are e.g. implementing your own CSS-based stone placement animations [TODO: rename these classes to mirror `shiftingStones` and `placedStones`]
+- There is a new `renderer` prop that can be either `"dom"` or `"canvas"` (defaults to `"dom"` today, will likely change as this library stabilizes). The DOM renderer should be identical to Shudan (minus a few small bugfixes), while the canvas renderer is brand new. It renders the grid, hoshis, and stationary solid-colored stones using canvas; everything else (ghost stones, markers, paint, selection, heat map, dimmed stones, and stones shifting due to being placed or shifted by placement) still render as DOM nodes
 
 ## Documentation
 
