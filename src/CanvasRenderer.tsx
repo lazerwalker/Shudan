@@ -157,12 +157,10 @@ export default function CanvasRenderer(props: RendererProps) {
       />
 
       {/* Ghost stones, markers, paint, selection, heat map, and dimmed/shifting stones rendered as DOM overlay */}
+      {/* Uses absolute positioning instead of CSS Grid to avoid accumulated track rounding with non-integer vertexSize */}
       <div
         className="shudan-vertices"
         style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${xs.length}, 1em)`,
-          gridTemplateRows: `repeat(${ys.length}, 1em)`,
           position: "absolute",
           top: 0,
           left: 0,
@@ -178,47 +176,56 @@ export default function CanvasRenderer(props: RendererProps) {
             const selected = selectedVertices.some(equalsVertex);
 
             return (
-              <CanvasVertex
+              <div
                 key={`${x}-${y}`}
-                position={[x, y]}
-                gridRow={yi + 1}
-                gridColumn={xi + 1}
-                shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
-                random={randomMap?.[y]?.[x]}
-                sign={sign}
-                heat={heatMap?.[y]?.[x]}
-                marker={markerMap?.[y]?.[x]}
-                ghostStone={ghostStoneMap?.[y]?.[x]}
-                dimmed={dimmedVertices.some(equalsVertex)}
-                animate={shiftingStones.some(equalsVertex)}
-                changed={placedStones.some(equalsVertex)}
-                paint={paintMap?.[y]?.[x]}
-                paintLeft={paintMap?.[y]?.[x - 1]}
-                paintRight={paintMap?.[y]?.[x + 1]}
-                paintTop={paintMap?.[y - 1]?.[x]}
-                paintBottom={paintMap?.[y + 1]?.[x]}
-                paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
-                paintTopRight={paintMap?.[y - 1]?.[x + 1]}
-                paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
-                paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
-                selected={selected}
-                selectedLeft={
-                  selected &&
-                  selectedVertices.some((v) => vertexEquals(v, [x - 1, y]))
-                }
-                selectedRight={
-                  selected &&
-                  selectedVertices.some((v) => vertexEquals(v, [x + 1, y]))
-                }
-                selectedTop={
-                  selected &&
-                  selectedVertices.some((v) => vertexEquals(v, [x, y - 1]))
-                }
-                selectedBottom={
-                  selected &&
-                  selectedVertices.some((v) => vertexEquals(v, [x, y + 1]))
-                }
-              />
+                style={{
+                  position: "absolute",
+                  left: xi * vertexSize,
+                  top: yi * vertexSize,
+                  width: vertexSize,
+                  height: vertexSize,
+                  display: "grid",
+                }}
+              >
+                <CanvasVertex
+                  position={[x, y]}
+                  shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
+                  random={randomMap?.[y]?.[x]}
+                  sign={sign}
+                  heat={heatMap?.[y]?.[x]}
+                  marker={markerMap?.[y]?.[x]}
+                  ghostStone={ghostStoneMap?.[y]?.[x]}
+                  dimmed={dimmedVertices.some(equalsVertex)}
+                  animate={shiftingStones.some(equalsVertex)}
+                  changed={placedStones.some(equalsVertex)}
+                  paint={paintMap?.[y]?.[x]}
+                  paintLeft={paintMap?.[y]?.[x - 1]}
+                  paintRight={paintMap?.[y]?.[x + 1]}
+                  paintTop={paintMap?.[y - 1]?.[x]}
+                  paintBottom={paintMap?.[y + 1]?.[x]}
+                  paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
+                  paintTopRight={paintMap?.[y - 1]?.[x + 1]}
+                  paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
+                  paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
+                  selected={selected}
+                  selectedLeft={
+                    selected &&
+                    selectedVertices.some((v) => vertexEquals(v, [x - 1, y]))
+                  }
+                  selectedRight={
+                    selected &&
+                    selectedVertices.some((v) => vertexEquals(v, [x + 1, y]))
+                  }
+                  selectedTop={
+                    selected &&
+                    selectedVertices.some((v) => vertexEquals(v, [x, y - 1]))
+                  }
+                  selectedBottom={
+                    selected &&
+                    selectedVertices.some((v) => vertexEquals(v, [x, y + 1]))
+                  }
+                />
+              </div>
             );
           })
         )}
@@ -451,24 +458,20 @@ function drawStones(ctx: CanvasRenderingContext2D, params: StoneParams) {
 
       ctx.save();
 
-      // Apply shadow (matches CSS: box-shadow: 0 .1em .2em rgba(23, 10, 2, .4))
       ctx.shadowColor = "rgba(23, 10, 2, 0.4)";
       ctx.shadowBlur = 0.2 * vertexSize;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0.1 * vertexSize;
 
-      // Draw stone
       const stoneImage = sign === 1 ? blackStoneImage : whiteStoneImage;
       if (stoneImage) {
         ctx.drawImage(stoneImage, stoneX, stoneY, stoneSize, stoneSize);
       } else {
-        // Fallback: draw solid circle
         ctx.fillStyle = sign === 1 ? blackColor : whiteColor;
         ctx.beginPath();
         ctx.arc(stoneCenterX, stoneCenterY, stoneSize / 2, 0, Math.PI * 2);
         ctx.fill();
 
-        // Add stroke for white stones (without shadow)
         ctx.shadowColor = "transparent";
         if (sign === -1) {
           ctx.strokeStyle = "#c3c3c3";
