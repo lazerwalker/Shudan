@@ -176,56 +176,48 @@ export default function CanvasRenderer(props: RendererProps) {
             const selected = selectedVertices.some(equalsVertex);
 
             return (
-              <div
+              <CanvasVertex
                 key={`${x}-${y}`}
-                style={{
-                  position: "absolute",
-                  left: xi * vertexSize,
-                  top: yi * vertexSize,
-                  width: vertexSize,
-                  height: vertexSize,
-                  display: "grid",
-                }}
-              >
-                <CanvasVertex
-                  position={[x, y]}
-                  shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
-                  random={randomMap?.[y]?.[x]}
-                  sign={sign}
-                  heat={heatMap?.[y]?.[x]}
-                  marker={markerMap?.[y]?.[x]}
-                  ghostStone={ghostStoneMap?.[y]?.[x]}
-                  dimmed={dimmedVertices.some(equalsVertex)}
-                  animate={shiftingStones.some(equalsVertex)}
-                  changed={placedStones.some(equalsVertex)}
-                  paint={paintMap?.[y]?.[x]}
-                  paintLeft={paintMap?.[y]?.[x - 1]}
-                  paintRight={paintMap?.[y]?.[x + 1]}
-                  paintTop={paintMap?.[y - 1]?.[x]}
-                  paintBottom={paintMap?.[y + 1]?.[x]}
-                  paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
-                  paintTopRight={paintMap?.[y - 1]?.[x + 1]}
-                  paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
-                  paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
-                  selected={selected}
-                  selectedLeft={
-                    selected &&
-                    selectedVertices.some((v) => vertexEquals(v, [x - 1, y]))
-                  }
-                  selectedRight={
-                    selected &&
-                    selectedVertices.some((v) => vertexEquals(v, [x + 1, y]))
-                  }
-                  selectedTop={
-                    selected &&
-                    selectedVertices.some((v) => vertexEquals(v, [x, y - 1]))
-                  }
-                  selectedBottom={
-                    selected &&
-                    selectedVertices.some((v) => vertexEquals(v, [x, y + 1]))
-                  }
-                />
-              </div>
+                xi={xi}
+                yi={yi}
+                vertexSize={vertexSize}
+                position={[x, y]}
+                shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
+                random={randomMap?.[y]?.[x]}
+                sign={sign}
+                heat={heatMap?.[y]?.[x]}
+                marker={markerMap?.[y]?.[x]}
+                ghostStone={ghostStoneMap?.[y]?.[x]}
+                dimmed={dimmedVertices.some(equalsVertex)}
+                animate={shiftingStones.some(equalsVertex)}
+                changed={placedStones.some(equalsVertex)}
+                paint={paintMap?.[y]?.[x]}
+                paintLeft={paintMap?.[y]?.[x - 1]}
+                paintRight={paintMap?.[y]?.[x + 1]}
+                paintTop={paintMap?.[y - 1]?.[x]}
+                paintBottom={paintMap?.[y + 1]?.[x]}
+                paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
+                paintTopRight={paintMap?.[y - 1]?.[x + 1]}
+                paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
+                paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
+                selected={selected}
+                selectedLeft={
+                  selected &&
+                  selectedVertices.some((v) => vertexEquals(v, [x - 1, y]))
+                }
+                selectedRight={
+                  selected &&
+                  selectedVertices.some((v) => vertexEquals(v, [x + 1, y]))
+                }
+                selectedTop={
+                  selected &&
+                  selectedVertices.some((v) => vertexEquals(v, [x, y - 1]))
+                }
+                selectedBottom={
+                  selected &&
+                  selectedVertices.some((v) => vertexEquals(v, [x, y + 1]))
+                }
+              />
             );
           })
         )}
@@ -260,8 +252,17 @@ export default function CanvasRenderer(props: RendererProps) {
 
 // --- CanvasVertex: thin wrapper around Vertex with early-exit optimization ---
 
-function CanvasVertex(props: VertexProps) {
+type CanvasVertexProps = VertexProps & {
+  xi: number;
+  yi: number;
+  vertexSize: number;
+};
+
+function CanvasVertex(props: CanvasVertexProps) {
   const {
+    xi,
+    yi,
+    vertexSize,
     sign,
     marker,
     ghostStone,
@@ -304,7 +305,20 @@ function CanvasVertex(props: VertexProps) {
   const stoneRenderedExternally =
     sign !== 0 && !isAnimating && !isShifting && !isDimmed;
 
-  return <Vertex {...props} stoneRenderedExternally={stoneRenderedExternally} />;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: xi * vertexSize,
+        top: yi * vertexSize,
+        width: vertexSize,
+        height: vertexSize,
+        display: "grid",
+      }}
+    >
+      <Vertex {...props} stoneRenderedExternally={stoneRenderedExternally} />
+    </div>
+  );
 }
 
 // --- Drawing functions ---
