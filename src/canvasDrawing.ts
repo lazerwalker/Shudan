@@ -1,6 +1,6 @@
-import { GRID_LINE_DIVISOR } from "./constants";
-import { type Vertex, type Map } from "./helper";
-import { vertexKey } from "./useDomVertices";
+import { GRID_LINE_DIVISOR } from "./constants.js";
+import { type Vertex, type Map } from "./helper.js";
+import { vertexKey } from "./useDomVertices.js";
 
 // Shift offsets for fuzzy stone placement (in em units)
 // Taken from index.css
