@@ -1,7 +1,8 @@
 # Shindan Goban
 
 A highly customizable, low-level React Goban component. It is a fork of
-[Shudan](https://github.com/sabaki), but has many improvements for performance and developer experience (see below).
+[Shudan](https://github.com/sabaki), but has many improvements for performance
+and developer experience (see below).
 
 Why the name? Shudan (手談) means "hand talk", an evocative euphemistic name for
 the game of Go. "Shin" (新) can mean "new", reflecting that this is a newer
@@ -26,7 +27,8 @@ which feels appropriate for a library used in tools to help analyze Go games.
 ## Differences from Shudan
 
 - Uses React, not Preact
-- Uses TypeScript natively, and modern React (e.g. SFCs instead of class components)
+- Uses TypeScript natively, and modern React (e.g. SFCs instead of class
+  components)
 - Adds a `coordinatesOnOutside` prop (default false) that allows coordinates to
   be rendered outside the board (primarily for accessibility contrast purposes)
 - Rewrites click/event handling to expose a unified semantic API:
@@ -36,9 +38,25 @@ which feels appropriate for a library used in tools to help analyze Go games.
   (e.g. `onVertexClickMouseUp` and `onVertexClickTouchStart`). This includes
   specific support for Apple Pencil, which often sends 'touchcancel' events
   instead of 'touchend'. This is a breaking change.
-- `BoundedGoban` guarantees that you will be given a Goban with the exact given `width` and `height`. It automatically calculates the largest possible `vertexSize` for a given size, and fills in any extra space as padding within the board. You can pass in both `width` and `height`, or only one. The new autosizer works synchronously, so the `onResized` prop has been removed
-- When `fuzzyStonePlacement` and `animateFuzzyStones` are true in Shudan, both newly-placed stones and their neighbors are given the `animated` class. Shindan splits that out into an `"animated"` class for a newly-placed stone, and `"changed"` for stones that are merely changing their fuzzily-shifted position. This may be useful if you are e.g. implementing your own CSS-based stone placement animations [TODO: rename these classes to mirror `shiftingStones` and `placedStones`]
-- There is a new `renderer` prop that can be either `"dom"` or `"canvas"` (defaults to `"dom"` today, will likely change as this library stabilizes). The DOM renderer should be identical to Shudan (minus a few small bugfixes), while the canvas renderer is brand new. It renders the grid, hoshis, and stationary solid-colored stones using canvas; everything else (ghost stones, markers, paint, selection, heat map, dimmed stones, and stones shifting due to being placed or shifted by placement) still render as DOM nodes
+- `BoundedGoban` guarantees that you will be given a Goban with the exact given
+  `width` and `height`. It automatically calculates the largest possible
+  `vertexSize` for a given size, and fills in any extra space as padding within
+  the board. You can pass in both `width` and `height`, or only one. The new
+  autosizer works synchronously, so the `onResized` prop has been removed
+- When `fuzzyStonePlacement` and `animateFuzzyStones` are true in Shudan, both
+  newly-placed stones and their neighbors are given the `animated` class.
+  Shindan splits that out into an `"animated"` class for a newly-placed stone,
+  and `"changed"` for stones that are merely changing their fuzzily-shifted
+  position. This may be useful if you are e.g. implementing your own CSS-based
+  stone placement animations [TODO: rename these classes to mirror
+  `shiftingStones` and `placedStones`]
+- There is a new `renderer` prop that can be either `"dom"` or `"canvas"`
+  (defaults to `"dom"` today, will likely change as this library stabilizes).
+  The DOM renderer should be identical to Shudan (minus a few small bugfixes),
+  while the canvas renderer is brand new. It renders the grid, hoshis, and
+  stationary solid-colored stones using canvas; everything else (ghost stones,
+  markers, paint, selection, heat map, dimmed stones, and stones shifting due to
+  being placed or shifted by placement) still render as DOM nodes
 
 ## Documentation
 

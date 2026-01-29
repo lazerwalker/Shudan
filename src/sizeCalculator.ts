@@ -95,7 +95,9 @@ export function calculateBoundedSize(
 
   if (vertexSize < 1) {
     throw new Error(
-      `Target dimensions too small: need at least ${Math.ceil(totalEms.x)}x${Math.ceil(totalEms.y)}px`
+      `Target dimensions too small: need at least ${Math.ceil(
+        totalEms.x
+      )}x${Math.ceil(totalEms.y)}px`
     );
   }
 

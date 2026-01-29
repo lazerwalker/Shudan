@@ -158,7 +158,10 @@ All props are optional. The following props are supported:
 
 - `renderer` `<"dom"|"canvas">` - Default: `dom`
 
-  Determines whether the goban renders using the old DOM-based renderer, or the new hybrid renderer that renders the grid/hoshi and static solid stones on canvas and renders everything else to DOM. Once the canvas renderer is more stable, it will likely become the default, as it is much more performant.
+  Determines whether the goban renders using the old DOM-based renderer, or the
+  new hybrid renderer that renders the grid/hoshi and static solid stones on
+  canvas and renders everything else to DOM. Once the canvas renderer is more
+  stable, it will likely become the default, as it is much more performant.
 
 - `busy` `<boolean>` - Default: `false`
 
@@ -347,7 +350,10 @@ feel free to open an issue, I'm open to alternatives.
 ### `BoundedGoban` Component
 
 Supports all props of `Goban`, but instead of `vertexSize`, you have to specify
-either `width` and/or `height` to control the size of the board. The Goban's div will be sized exactly to be the given width and height, with the `vertexSize` automatically set as large as possible while fully fitting. Any extra space will be added to the board, inside the boarder but outside the grid.
+either `width` and/or `height` to control the size of the board. The Goban's div
+will be sized exactly to be the given width and height, with the `vertexSize`
+automatically set as large as possible while fully fitting. Any extra space will
+be added to the board, inside the boarder but outside the grid.
 
 #### Board Props
 

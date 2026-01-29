@@ -1,11 +1,13 @@
 import { useRef, useLayoutEffect } from "react";
-import { vertexEquals, type Vertex as VertexData, type Map } from "./helper.js";
-import Vertex, { VertexProps } from "./Vertex.js";
+import { type Vertex as VertexData, type Map } from "./helper.js";
 import Line from "./Line.js";
 import { useTheme } from "./theme.js";
 import { type RendererProps } from "./Goban.js";
+import { useDomVertices, vertexKey } from "./useDomVertices.js";
+import { CanvasVertex } from "./CanvasVertex.js";
 
 // Shift offsets for fuzzy stone placement (in em units)
+// Taken from index.css — could conceivably read from CSS at some point?
 const shiftOffsets: Record<number, [number, number]> = {
   0: [0, 0],
   1: [-0.07, 0],
@@ -51,6 +53,21 @@ export default function CanvasRenderer(props: RendererProps) {
   const fuzzyPadding = fuzzyStonePlacement ? Math.ceil(vertexSize * 0.1) : 0;
   const canvasWidth = xs.length * vertexSize + fuzzyPadding * 2;
   const canvasHeight = ys.length * vertexSize + fuzzyPadding * 2;
+
+  const { domVertices, selectedSet, dimmedSet, shiftingSet, placedSet } =
+    useDomVertices({
+      xs,
+      ys,
+      signMap,
+      markerMap,
+      ghostStoneMap,
+      heatMap,
+      paintMap,
+      selectedVertices,
+      dimmedVertices,
+      shiftingStones,
+      placedStones,
+    });
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -100,9 +117,9 @@ export default function CanvasRenderer(props: RendererProps) {
       signMap,
       fuzzyStonePlacement,
       shiftMap,
-      dimmedVertices,
-      shiftingStones,
-      placedStones,
+      dimmedSet,
+      shiftingSet,
+      placedSet,
       blackStoneImage: theme.blackStoneImage,
       whiteStoneImage: theme.whiteStoneImage,
       blackColor: theme.blackBackgroundColor,
@@ -123,9 +140,9 @@ export default function CanvasRenderer(props: RendererProps) {
     signMap,
     fuzzyStonePlacement,
     shiftMap,
-    dimmedVertices,
-    shiftingStones,
-    placedStones,
+    dimmedSet,
+    shiftingSet,
+    placedSet,
     theme,
   ]);
 
@@ -153,7 +170,7 @@ export default function CanvasRenderer(props: RendererProps) {
       />
 
       {/* Ghost stones, markers, paint, selection, heat map, and dimmed/shifting stones rendered as DOM overlay */}
-      {/* Uses absolute positioning instead of CSS Grid to avoid accumulated track rounding with non-integer vertexSize */}
+      {/* Only renders vertices that actually need DOM - not all 361 */}
       <div
         className="shudan-vertices"
         style={{
@@ -165,57 +182,39 @@ export default function CanvasRenderer(props: RendererProps) {
           zIndex: 1,
         }}
       >
-        {ys.map((y, yi) =>
-          xs.map((x, xi) => {
-            const equalsVertex = (v: VertexData) => vertexEquals(v, [x, y]);
-            const sign = signMap?.[y]?.[x] || 0;
-            const selected = selectedVertices.some(equalsVertex);
-
-            return (
-              <CanvasVertex
-                key={`${x}-${y}`}
-                xi={xi}
-                yi={yi}
-                vertexSize={vertexSize}
-                position={[x, y]}
-                shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
-                random={randomMap?.[y]?.[x]}
-                sign={sign}
-                heat={heatMap?.[y]?.[x]}
-                marker={markerMap?.[y]?.[x]}
-                ghostStone={ghostStoneMap?.[y]?.[x]}
-                dimmed={dimmedVertices.some(equalsVertex)}
-                animate={shiftingStones.some(equalsVertex)}
-                changed={placedStones.some(equalsVertex)}
-                paint={paintMap?.[y]?.[x]}
-                paintLeft={paintMap?.[y]?.[x - 1]}
-                paintRight={paintMap?.[y]?.[x + 1]}
-                paintTop={paintMap?.[y - 1]?.[x]}
-                paintBottom={paintMap?.[y + 1]?.[x]}
-                paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
-                paintTopRight={paintMap?.[y - 1]?.[x + 1]}
-                paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
-                paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
-                selected={selected}
-                selectedLeft={
-                  selected &&
-                  selectedVertices.some((v) => vertexEquals(v, [x - 1, y]))
-                }
-                selectedRight={
-                  selected &&
-                  selectedVertices.some((v) => vertexEquals(v, [x + 1, y]))
-                }
-                selectedTop={
-                  selected &&
-                  selectedVertices.some((v) => vertexEquals(v, [x, y - 1]))
-                }
-                selectedBottom={
-                  selected &&
-                  selectedVertices.some((v) => vertexEquals(v, [x, y + 1]))
-                }
-              />
-            );
-          })
+        {domVertices.map(
+          ({ x, y, xi, yi, sign, selected, dimmed, animate, changed }) => (
+            <CanvasVertex
+              key={`${x}-${y}`}
+              xi={xi}
+              yi={yi}
+              vertexSize={vertexSize}
+              position={[x, y]}
+              shift={fuzzyStonePlacement ? shiftMap?.[y]?.[x] : 0}
+              random={randomMap?.[y]?.[x]}
+              sign={sign}
+              heat={heatMap?.[y]?.[x]}
+              marker={markerMap?.[y]?.[x]}
+              ghostStone={ghostStoneMap?.[y]?.[x]}
+              dimmed={dimmed}
+              animate={animate}
+              changed={changed}
+              paint={paintMap?.[y]?.[x]}
+              paintLeft={paintMap?.[y]?.[x - 1]}
+              paintRight={paintMap?.[y]?.[x + 1]}
+              paintTop={paintMap?.[y - 1]?.[x]}
+              paintBottom={paintMap?.[y + 1]?.[x]}
+              paintTopLeft={paintMap?.[y - 1]?.[x - 1]}
+              paintTopRight={paintMap?.[y - 1]?.[x + 1]}
+              paintBottomLeft={paintMap?.[y + 1]?.[x - 1]}
+              paintBottomRight={paintMap?.[y + 1]?.[x + 1]}
+              selected={selected}
+              selectedLeft={selected && selectedSet.has(vertexKey(x - 1, y))}
+              selectedRight={selected && selectedSet.has(vertexKey(x + 1, y))}
+              selectedTop={selected && selectedSet.has(vertexKey(x, y - 1))}
+              selectedBottom={selected && selectedSet.has(vertexKey(x, y + 1))}
+            />
+          )
         )}
       </div>
 
@@ -242,77 +241,6 @@ export default function CanvasRenderer(props: RendererProps) {
           ))}
         </g>
       </svg>
-    </div>
-  );
-}
-
-// --- CanvasVertex: thin wrapper around Vertex with early-exit optimization ---
-
-type CanvasVertexProps = VertexProps & {
-  xi: number;
-  yi: number;
-  vertexSize: number;
-};
-
-function CanvasVertex(props: CanvasVertexProps) {
-  const {
-    xi,
-    yi,
-    vertexSize,
-    sign,
-    marker,
-    ghostStone,
-    heat,
-    paint,
-    paintLeft,
-    paintRight,
-    paintTop,
-    paintBottom,
-    selected,
-    animate,
-    changed,
-    dimmed,
-  } = props;
-
-  // Early exit if nothing to render
-  const hasGhost = ghostStone && sign === 0;
-  const hasMarker = !!marker;
-  const hasHeat = heat && heat.strength > 0 && heat.strength <= 9;
-  const hasPaint =
-    !!paint || !!paintLeft || !!paintRight || !!paintTop || !!paintBottom;
-  const isAnimating = changed;
-  const isShifting = animate;
-  const isDimmed = dimmed;
-
-  if (
-    !hasGhost &&
-    !hasMarker &&
-    !isAnimating &&
-    !isShifting &&
-    !isDimmed &&
-    !hasHeat &&
-    !hasPaint &&
-    !selected
-  ) {
-    return null;
-  }
-
-  // Stone is rendered externally (on canvas) unless it needs DOM for animation/dimming
-  const stoneRenderedExternally =
-    sign !== 0 && !isAnimating && !isShifting && !isDimmed;
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: xi * vertexSize,
-        top: yi * vertexSize,
-        width: vertexSize,
-        height: vertexSize,
-        display: "grid",
-      }}
-    >
-      <Vertex {...props} stoneRenderedExternally={stoneRenderedExternally} />
     </div>
   );
 }
@@ -406,9 +334,9 @@ interface StoneParams {
   signMap: Map<0 | 1 | -1>;
   fuzzyStonePlacement: boolean;
   shiftMap: number[][];
-  dimmedVertices: VertexData[];
-  shiftingStones: VertexData[];
-  placedStones: VertexData[];
+  dimmedSet: Set<string>;
+  shiftingSet: Set<string>;
+  placedSet: Set<string>;
   blackStoneImage: HTMLCanvasElement | null;
   whiteStoneImage: HTMLCanvasElement | null;
   blackColor: string;
@@ -423,9 +351,9 @@ function drawStones(ctx: CanvasRenderingContext2D, params: StoneParams) {
     signMap,
     fuzzyStonePlacement,
     shiftMap,
-    dimmedVertices,
-    shiftingStones,
-    placedStones,
+    dimmedSet,
+    shiftingSet,
+    placedSet,
     blackStoneImage,
     whiteStoneImage,
     blackColor,
@@ -444,9 +372,10 @@ function drawStones(ctx: CanvasRenderingContext2D, params: StoneParams) {
       if (sign === 0 || sign === undefined) continue;
 
       // Skip stones that are being animated, shifting, or dimmed (they're rendered as DOM)
-      if (placedStones.some((v) => vertexEquals(v, [x, y]))) continue;
-      if (shiftingStones.some((v) => vertexEquals(v, [x, y]))) continue;
-      if (dimmedVertices.some((v) => vertexEquals(v, [x, y]))) continue;
+      const key = vertexKey(x, y);
+      if (placedSet.has(key)) continue;
+      if (shiftingSet.has(key)) continue;
+      if (dimmedSet.has(key)) continue;
 
       const cx = (2 * xi + 1) * halfVertexSize;
       const cy = (2 * yi + 1) * halfVertexSize;
