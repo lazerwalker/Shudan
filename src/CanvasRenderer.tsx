@@ -1,9 +1,5 @@
 import { useRef, useLayoutEffect } from "react";
-import {
-  vertexEquals,
-  type Vertex as VertexData,
-  type Map,
-} from "./helper.js";
+import { vertexEquals, type Vertex as VertexData, type Map } from "./helper.js";
 import Vertex, { VertexProps } from "./Vertex.js";
 import Line from "./Line.js";
 import { useTheme } from "./theme.js";

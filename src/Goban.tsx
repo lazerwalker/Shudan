@@ -16,34 +16,6 @@ import { GhostStone, HeatVertex } from "./Vertex.js";
 import { LineMarker } from "./Line.js";
 import { Marker } from "./Marker.js";
 
-export type RendererProps = {
-  vertexSize: number;
-  width: number;
-  height: number;
-  xs: number[];
-  ys: number[];
-  hoshis: VertexData[];
-
-  signMap: Map<0 | 1 | -1>;
-
-  markerMap?: Map<Marker | null>;
-  paintMap?: Map<0 | 1 | -1>;
-  ghostStoneMap?: Map<GhostStone | null>;
-  heatMap?: Map<HeatVertex | null>;
-
-  fuzzyStonePlacement: boolean;
-  shiftMap: number[][];
-  randomMap: number[][];
-
-  selectedVertices: VertexData[];
-  dimmedVertices: VertexData[];
-  shiftingStones: VertexData[];
-  placedStones: VertexData[];
-  lines: LineMarker[];
-
-  rangeX: [number, number];
-  rangeY: [number, number];
-};
 import { useGobanPointerEvents } from "./useGobanPointerEvents.js";
 import GobanShell from "./GobanShell.js";
 import DOMRenderer from "./DOMRenderer.js";
@@ -62,6 +34,10 @@ export interface GobanProps {
 
   busy?: boolean;
   vertexSize?: number;
+
+  /** Extra padding inside the board border (in pixels). Used by BoundedGoban to fill target dimensions. */
+  padding?: { x: number; y: number };
+
   rangeX?: [start: number, stop: number];
   rangeY?: [start: number, stop: number];
   renderer?: "dom" | "canvas";
@@ -94,11 +70,41 @@ export interface GobanProps {
   animationDuration?: number;
 }
 
+export type RendererProps = {
+  vertexSize: number;
+  width: number;
+  height: number;
+  xs: number[];
+  ys: number[];
+  hoshis: VertexData[];
+
+  signMap: Map<0 | 1 | -1>;
+
+  markerMap?: Map<Marker | null>;
+  paintMap?: Map<0 | 1 | -1>;
+  ghostStoneMap?: Map<GhostStone | null>;
+  heatMap?: Map<HeatVertex | null>;
+
+  fuzzyStonePlacement: boolean;
+  shiftMap: number[][];
+  randomMap: number[][];
+
+  selectedVertices: VertexData[];
+  dimmedVertices: VertexData[];
+  shiftingStones: VertexData[];
+  placedStones: VertexData[];
+  lines: LineMarker[];
+
+  rangeX: [number, number];
+  rangeY: [number, number];
+};
+
 export default function Goban(props: GobanProps) {
   const {
     animationDuration,
     innerProps = {},
     vertexSize = 24,
+    padding,
     coordX,
     coordY,
     busy,
@@ -278,6 +284,7 @@ export default function Goban(props: GobanProps) {
   return (
     <GobanShell
       vertexSize={vertexSize}
+      padding={padding}
       xs={xs}
       ys={ys}
       height={height}

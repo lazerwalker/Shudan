@@ -12,6 +12,9 @@ type GobanShellProps = {
   coordX?: (i: number) => string | number;
   coordY?: (i: number) => string | number;
 
+  /** Extra padding inside the board border (in pixels). Used by BoundedGoban to fill target dimensions. */
+  padding?: { x: number; y: number };
+
   busy?: boolean;
 
   id?: string;
@@ -35,6 +38,7 @@ export default function GobanShell(props: GobanShellProps) {
     coordX,
     coordY,
     height,
+    padding,
     innerProps,
     busy,
     contentRef,
@@ -99,6 +103,12 @@ export default function GobanShell(props: GobanShellProps) {
           ...(showCoordinatesInside && {
             gridTemplateRows: "1em auto 1em",
             gridTemplateColumns: "1em auto 1em",
+          }),
+          ...(padding && {
+            paddingLeft: padding.x,
+            paddingRight: padding.x,
+            paddingTop: padding.y,
+            paddingBottom: padding.y,
           }),
         }}
       >

@@ -13,3 +13,9 @@ export {
 } from "./helper.js";
 export { type GobanProps } from "./Goban.js";
 export { type BoundedGobanProps } from "./BoundedGoban.js";
+export {
+  calculateBoundedSize,
+  calculateTotalEms,
+  type BoardConfig,
+  type BoundedSizeResult,
+} from "./sizeCalculator.js";

@@ -1,8 +1,6 @@
 import { createElement as h, Component } from "react";
 import { type Vertex } from "./helper.js";
-
-// Relevent for Tenuki. Would want to find a better abstraction.
-const MagicNumberVertexScaleFactor = 40;
+import { GRID_LINE_DIVISOR } from "./constants.js";
 
 export interface GridProps {
   vertexSize: number;
@@ -29,7 +27,7 @@ export default class Grid extends Component<GridProps> {
   render() {
     let { vertexSize, width, height, xs, ys, hoshis } = this.props;
     let halfVertexSize = vertexSize / 2;
-    let gridLineSize = vertexSize / MagicNumberVertexScaleFactor;
+    let gridLineSize = vertexSize / GRID_LINE_DIVISOR;
 
     return (
       xs.length > 0 &&

@@ -343,24 +343,16 @@ feel free to open an issue, I'm open to alternatives.
 ### `BoundedGoban` Component
 
 Supports all props of `Goban`, but instead of `vertexSize`, you have to specify
-`maxWidth` and `maxHeight` to control the size of the board.
+either `width` and/or `height` to control the size of the board. The Goban's div will be sized exactly to be the given width and height, with the `vertexSize` automatically set as large as possible while fully fitting. Any extra space will be added to the board, inside the boarder but outside the grid.
 
 #### Board Props
 
-- `maxWidth` `<number>`
+- `width` `<number>`
 
-  The maximum width in pixels of the Goban.
+  The exact width in pixels of the Goban.
 
-- `maxHeight` `<number>`
+- `height` `<number>`
 
-  The maximum height in pixels of the Goban.
+  The exact height in pixels of the Goban.
 
-- `maxVertexSize` `<number>` - Default: `Infinity`
-
-  The maximum `vertexSize`.
-
-#### Event Props
-
-- `onResized` `<Function>`
-
-  This function will be called when the component has finished resizing.
+All other props are the same as `Goban`, except for not supporting `vertexSize`
