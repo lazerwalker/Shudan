@@ -458,10 +458,22 @@ function drawStones(ctx: CanvasRenderingContext2D, params: StoneParams) {
 
       ctx.save();
 
+      // Draw an opaque circle to generate the shadow, matching CSS where
+      // box-shadow is cast from the ::before's border-radius:50% shape.
+      // Canvas shadow alpha is multiplied by source alpha, so the circle
+      // must be fully opaque for the shadow to match shadowColor exactly.
       ctx.shadowColor = "rgba(23, 10, 2, 0.4)";
-      ctx.shadowBlur = 0.2 * vertexSize;
+      ctx.shadowBlur = 0.4 * vertexSize;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0.1 * vertexSize;
+
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(stoneCenterX, stoneCenterY, stoneSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw stone on top without shadow (covers the opaque circle)
+      ctx.shadowColor = "transparent";
 
       const stoneImage = sign === 1 ? blackStoneImage : whiteStoneImage;
       if (stoneImage) {
@@ -472,7 +484,6 @@ function drawStones(ctx: CanvasRenderingContext2D, params: StoneParams) {
         ctx.arc(stoneCenterX, stoneCenterY, stoneSize / 2, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.shadowColor = "transparent";
         if (sign === -1) {
           ctx.strokeStyle = "#c3c3c3";
           ctx.lineWidth = 1;
