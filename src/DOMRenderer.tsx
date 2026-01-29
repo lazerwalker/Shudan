@@ -70,9 +70,8 @@ export default function DOMRenderer(props: RendererProps) {
                 marker={markerMap?.[y]?.[x]}
                 ghostStone={ghostStoneMap?.[y]?.[x]}
                 dimmed={dimmedVertices.some(equalsVertex)}
-                // TODO: Rename both of these to be clearer about the distinction
-                animate={shiftingStones.some(equalsVertex)}
-                changed={placedStones.some(equalsVertex)}
+                shifting={shiftingStones.some(equalsVertex)}
+                placed={placedStones.some(equalsVertex)}
                 paint={paintMap?.[y]?.[x]}
                 paintLeft={paintMap?.[y]?.[x - 1]}
                 paintRight={paintMap?.[y]?.[x + 1]}

@@ -212,7 +212,17 @@ All props are optional. The following props are supported:
   When set to `true`, stones that are added to the board will slide into place,
   adjusting nearby stones if necessary. Only works if `fuzzyStonePlacement` is
   set to `true`. Only triggers animation if `signMap` prop updates with a new
-  object.
+  object. For your own CSS purposes, newly-placed stones will be given the
+  `placed` class, and neighbor stones that are shifting as a result will be
+  given the `shifting` class.
+
+- `animationDuration` `<number>` - Default: `200`
+
+  The default duration for stone placement animations. This does not affect the
+  actual animation speed, it only affects how long until the CSS class is
+  removed, so it is likely not useful unless you are manually performing your
+  own slower animations based on these CSS classes. Does nothing unless
+  `fuzzyStonePlacement` and `animateStonePlacement` are both true.
 
 #### Map Props
 

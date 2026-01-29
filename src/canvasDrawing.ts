@@ -25,7 +25,10 @@ interface GridParams {
   foregroundColor: string;
 }
 
-export function drawGridLines(ctx: CanvasRenderingContext2D, params: GridParams) {
+export function drawGridLines(
+  ctx: CanvasRenderingContext2D,
+  params: GridParams
+) {
   const { vertexSize, width, height, xs, ys, foregroundColor } = params;
 
   if (xs.length === 0 || ys.length === 0) return;
@@ -74,7 +77,10 @@ export interface HoshiParams {
   foregroundColor: string;
 }
 
-export function drawHoshiPoints(ctx: CanvasRenderingContext2D, params: HoshiParams) {
+export function drawHoshiPoints(
+  ctx: CanvasRenderingContext2D,
+  params: HoshiParams
+) {
   const { vertexSize, xs, ys, hoshis, foregroundColor } = params;
 
   const halfVertexSize = vertexSize / 2;

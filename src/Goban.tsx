@@ -42,7 +42,7 @@ export interface GobanProps {
 
   rangeX?: [start: number, stop: number];
   rangeY?: [start: number, stop: number];
-  
+
   showCoordinates?: boolean;
   coordinatesOnOutside?: boolean;
   coordX?: (x: number) => string | number;

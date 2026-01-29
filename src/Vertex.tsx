@@ -36,8 +36,8 @@ export type VertexProps = {
   marker?: MarkerData | null;
   ghostStone?: GhostStone | null;
 
-  animate?: boolean;
-  changed?: boolean;
+  shifting?: boolean;
+  placed?: boolean;
   selected?: boolean;
 
   selectedLeft?: boolean;
@@ -78,8 +78,8 @@ function Vertex(props: VertexProps) {
     dimmed,
     marker,
     ghostStone,
-    animate,
-    changed,
+    shifting,
+    placed,
     selected,
     selectedLeft,
     selectedRight,
@@ -120,8 +120,8 @@ function Vertex(props: VertexProps) {
           [`shudan-shift_${shift}`]: !!shift,
           [`shudan-heat_${!!heat && heat.strength}`]: !!heat,
           "shudan-dimmed": dimmed,
-          "shudan-animate": animate,
-          "shudan-changed": changed,
+          "shudan-shifting": shifting,
+          "shudan-placed": placed,
           "shudan-stone-external": stoneRenderedExternally,
 
           [`shudan-paint_${paint! > 0 ? 1 : -1}`]: !!paint,

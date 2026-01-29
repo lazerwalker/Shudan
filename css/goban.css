@@ -131,7 +131,7 @@
 
 /* Fuzzy stone placement */
 
-.shudan-vertex:not(.shudan-sign_0).shudan-animate .shudan-stone {
+.shudan-vertex:not(.shudan-sign_0).shudan-shifting .shudan-stone {
     transition: transform .2s;
   }
   .shudan-vertex:not(.shudan-sign_0).shudan-shift_1 .shudan-stone {

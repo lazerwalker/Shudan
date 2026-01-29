@@ -4,6 +4,7 @@ import { useTheme } from "./theme.js";
 import { type RendererProps } from "./Goban.js";
 import { useDomVertices, vertexKey } from "./useDomVertices.js";
 import { CanvasVertex } from "./CanvasVertex.js";
+import { drawGridLines, drawHoshiPoints, drawStones } from "./canvasDrawing.js";
 
 export default function CanvasRenderer(props: RendererProps) {
   const {
@@ -162,7 +163,7 @@ export default function CanvasRenderer(props: RendererProps) {
         }}
       >
         {domVertices.map(
-          ({ x, y, xi, yi, sign, selected, dimmed, animate, changed }) => (
+          ({ x, y, xi, yi, sign, selected, dimmed, shifting, placed }) => (
             <CanvasVertex
               key={`${x}-${y}`}
               xi={xi}
@@ -176,8 +177,8 @@ export default function CanvasRenderer(props: RendererProps) {
               marker={markerMap?.[y]?.[x]}
               ghostStone={ghostStoneMap?.[y]?.[x]}
               dimmed={dimmed}
-              animate={animate}
-              changed={changed}
+              shifting={shifting}
+              placed={placed}
               paint={paintMap?.[y]?.[x]}
               paintLeft={paintMap?.[y]?.[x - 1]}
               paintRight={paintMap?.[y]?.[x + 1]}

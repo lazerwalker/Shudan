@@ -7,10 +7,10 @@ interface CanvasVertexProps extends VertexProps {
 }
 
 export function CanvasVertex(props: CanvasVertexProps) {
-  const { xi, yi, vertexSize, sign, animate, changed, dimmed } = props;
+  const { xi, yi, vertexSize, sign, shifting, placed, dimmed } = props;
 
   // Stone is rendered on canvas unless it needs DOM for animation/dimming
-  const stoneRenderedExternally = sign !== 0 && !changed && !animate && !dimmed;
+  const stoneRenderedExternally = sign !== 0 && !placed && !shifting && !dimmed;
 
   return (
     <div

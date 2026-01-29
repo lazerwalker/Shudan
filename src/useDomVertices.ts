@@ -17,8 +17,8 @@ interface DomVertex {
   sign: 0 | 1 | -1;
   selected: boolean;
   dimmed: boolean;
-  animate: boolean;
-  changed: boolean;
+  shifting: boolean;
+  placed: boolean;
 }
 
 interface UseDomVerticesResult {
@@ -149,8 +149,8 @@ export function useDomVertices(props: {
         sign: signMap?.[y]?.[x] || 0,
         selected: selectedSet.has(key),
         dimmed: dimmedSet.has(key),
-        animate: shiftingSet.has(key),
-        changed: placedSet.has(key),
+        shifting: shiftingSet.has(key),
+        placed: placedSet.has(key),
       });
     }
 

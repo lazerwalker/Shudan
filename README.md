@@ -45,11 +45,10 @@ which feels appropriate for a library used in tools to help analyze Go games.
   autosizer works synchronously, so the `onResized` prop has been removed
 - When `fuzzyStonePlacement` and `animateFuzzyStones` are true in Shudan, both
   newly-placed stones and their neighbors are given the `animated` class.
-  Shindan splits that out into an `"animated"` class for a newly-placed stone,
-  and `"changed"` for stones that are merely changing their fuzzily-shifted
+  Shindan splits that out into a `"placed"` class for a newly-placed stone, and
+  `"shifted"` for stones that are merely changing their fuzzily-shifted
   position. This may be useful if you are e.g. implementing your own CSS-based
-  stone placement animations [TODO: rename these classes to mirror
-  `shiftingStones` and `placedStones`]
+  stone placement animations
 - There is a new `renderer` prop that can be either `"dom"` or `"canvas"`
   (defaults to `"dom"` today, will likely change as this library stabilizes).
   The DOM renderer should be identical to Shudan (minus a few small bugfixes),
