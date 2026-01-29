@@ -32,6 +32,8 @@ export interface GobanProps {
   style?: React.CSSProperties;
   innerProps?: React.ComponentPropsWithRef<"div">;
 
+  renderer?: "dom" | "canvas";
+
   busy?: boolean;
   vertexSize?: number;
 
@@ -40,8 +42,7 @@ export interface GobanProps {
 
   rangeX?: [start: number, stop: number];
   rangeY?: [start: number, stop: number];
-  renderer?: "dom" | "canvas";
-
+  
   showCoordinates?: boolean;
   coordinatesOnOutside?: boolean;
   coordX?: (x: number) => string | number;
