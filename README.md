@@ -24,6 +24,10 @@ which feels appropriate for a library used in tools to help analyze Go games.
 - Busy state
 - Partial board
 
+## Documentation
+
+See [documentation](./docs/README.md).
+
 ## Differences from Shudan
 
 - Uses React, not Preact
@@ -57,10 +61,6 @@ which feels appropriate for a library used in tools to help analyze Go games.
   markers, paint, selection, heat map, dimmed stones, and stones shifting due to
   being placed or shifted by placement) still render as DOM nodes
 
-## Documentation
-
-See [documentation](./docs/README.md).
-
 ## Build Demo
 
 Make sure you have Node.js v8 and npm installed. First, clone this repository
@@ -84,4 +84,21 @@ You can use the `watch-demo` command for development:
 $ npm run watch-demo
 ```
 
-Open `demo/index.html` in your browser to run demo. A
+Open `demo/index.html` in your browser to run demo.
+
+## Public Roadmap
+
+- Get the canvas renderer more production-ready, and make it the default
+- First-class theme support for [Sabaki](http://github.com/sabakihq/sabaki)
+  themes. This mostly works (as it does undocumented in vanilla Shudan), but
+  needs updating for the canvas renderer since we statically load CSS once at
+  load-time
+- Add first-class screen-reader support. For the DOM renderer, this likely means
+  some ARIA tags, for the canvas renderer it will mean a dedicated accessibility
+  DOM tree
+- Tenuki extends Shindan with a component that allows zooming and panning a
+  board without changing its wrapper size. I'd like to bring that in-house as an
+  'official' feature, which will also make it easier for the canvas renderer to
+  support dynamic rescaling (it is currently low-resolution when zoomed)
+- Add optional alternative styling for annotations to make them more legible on
+  small screens (e.g. phones)

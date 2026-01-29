@@ -68,9 +68,10 @@ Board positions are represented by a **vertex**, i.e. an array of the form
 
 ### Styling
 
-Shudan only uses `<div>`, `<span>`, `<svg>`, `<rect>`, and `<circle>` elements
-with class names prefixed with `shudan-`. Override the background image for
-certain classes to customize the appearance:
+Shindan only uses `<div>`, `<span>`, `<svg>`, `<rect>`, and `<circle>` elements
+with class names prefixed with `shudan-` (at some point this may be updated to
+`shindan-`). Override the background image for certain classes to customize the
+appearance:
 
 ```css
 .shudan-goban-image {
